@@ -1,44 +1,48 @@
 # Data Structures & Algorithms Lab 2025
 
-Lab materials for the Data Structures & Algorithms course.
+Graduate-level course covering Python fundamentals, Flask web development, and core algorithms including sorting, graph traversals, and complexity analysis.
 
-## Setup
+## Prerequisites
 
-1. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+- Python 3.10+
+- Basic programming experience
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Python Refresher
 
-3. Launch Jupyter:
-   ```bash
-   jupyter notebook
-   ```
+| Notebook | Description |
+|----------|-------------|
+| [0_python_refresher.ipynb](0_python_refresher.ipynb) | Python basics review |
 
-## Lab Sequence
+## Labs
 
-| Lab | Topics |
-|-----|--------|
-| 0 | Python Refresher |
-| 1 | Course Introduction & Preliminaries |
-| 2 | Flask Introduction |
-| 3 | Virtual Environments, Dynamic Flask Apps |
-| 4 | Programming Paradigms (Declarative, Imperative, Functional, OOP) |
-| 5 | Flask Recap, Templates |
-| 6 | Organizing Flask Applications |
-| 7 | Big O Analysis, Plotly Visualization |
-| 8 | Bubble Sort, Merge Sort, Divide & Conquer |
-| 9 | Recurrence Relations, Master Theorem |
-| 10 | Graphs, Trees, Traversals |
-| 11 | Greedy Algorithms (Interval Scheduling, Dijkstra's) |
+### Foundations
 
-## Structure
+| Lab | Notebook | Topics |
+|-----|----------|--------|
+| 1 | [lab_1_python_setup_fibonacci.ipynb](lab_1_python_setup_fibonacci.ipynb) | Python setup, Fibonacci |
 
-- `labN.ipynb` - Student lab notebooks
-- `labN_solutions.ipynb` - Solutions (for instructors)
-- `images/` - Diagrams and figures used in notebooks
+### Web Development with Flask
+
+| Lab | Notebook | Topics |
+|-----|----------|--------|
+| 2 | [lab_2_flask_intro.ipynb](lab_2_flask_intro.ipynb) | Flask introduction |
+| 3 | [lab_3_flask_calculator.ipynb](lab_3_flask_calculator.ipynb) | Dynamic apps, forms, deployment |
+| 4 | [lab_4_oop_classes.ipynb](lab_4_oop_classes.ipynb) | OOP, classes, testing |
+| 5 | [lab_5_sqlalchemy_databases.ipynb](lab_5_sqlalchemy_databases.ipynb) | SQLAlchemy, databases |
+
+### Algorithm Analysis & Visualisation
+
+| Lab | Notebook | Topics |
+|-----|----------|--------|
+| 6 | [lab_6_big_o_complexity.ipynb](lab_6_big_o_complexity.ipynb) | Big O complexity |
+| 7 | [lab_7_plotly_dashboards.ipynb](lab_7_plotly_dashboards.ipynb) | Plotly dashboards |
+
+### Core Algorithms
+
+| Lab | Notebook | Topics |
+|-----|----------|--------|
+| 8 | [lab_8_sorting_divide_conquer.ipynb](lab_8_sorting_divide_conquer.ipynb) | Sorting, divide & conquer |
+| 9 | [lab_9_recurrence_master_theorem.ipynb](lab_9_recurrence_master_theorem.ipynb) | Recurrence relations, Master theorem |
+| 10 | [lab_10_trees_dfs_bfs.ipynb](lab_10_trees_dfs_bfs.ipynb) | Trees, DFS, BFS |
+| 11 | [lab_11_greedy_dijkstra_prim.ipynb](lab_11_greedy_dijkstra_prim.ipynb) | Greedy algorithms, Dijkstra, Prim |
+| 12 | [lab_12_complexity_np_sat.ipynb](lab_12_complexity_np_sat.ipynb) | Complexity theory, NP, SAT |
