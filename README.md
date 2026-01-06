@@ -46,3 +46,19 @@ Graduate-level course covering Python fundamentals, Flask web development, and c
 | 10 | [lab_10_trees_dfs_bfs.ipynb](lab_10_trees_dfs_bfs.ipynb) | Trees, graphs, DFS, BFS |
 | 11 | [lab_11_greedy_dijkstra_prim.ipynb](lab_11_greedy_dijkstra_prim.ipynb) | Weighted graphs, greedy algorithms, Dijkstra, Prim |
 | 12 | [lab_12_complexity_np_sat.ipynb](lab_12_complexity_np_sat.ipynb) | Complexity theory, NP, SAT |
+
+## Companion Notes
+
+Unofficial companion notes are available covering the theoretical foundations and lecture content:
+
+📄 **[Download PDF](henry_notes_unofficial_accompaniment/main.pdf)** — Comprehensive notes covering weeks 1-11
+
+The notes include:
+- Computing fundamentals (binary, memory, data structures)
+- Programming paradigms and OOP concepts
+- Algorithm complexity and Big O analysis
+- Sorting algorithms and divide & conquer
+- Graph algorithms (BFS, DFS, Dijkstra, Prim)
+- Complexity theory and NP-completeness
+
+LaTeX source files are available in [`henry_notes_unofficial_accompaniment/`](henry_notes_unofficial_accompaniment/) for reference or modification.
