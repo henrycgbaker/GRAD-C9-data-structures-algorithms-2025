@@ -51,7 +51,7 @@ Graduate-level course covering Python fundamentals, Flask web development, and c
 
 Unofficial companion notes are available covering the theoretical foundations and lecture content:
 
-📄 **[Download PDF](henry_notes_unofficial_accompaniment/main.pdf)** — Comprehensive notes covering weeks 1-11
+📄 **[Download PDF](henry_notes/data_structures_algorithms/main.pdf)** — Comprehensive notes covering weeks 1-11
 
 The notes include:
 - Computing fundamentals (binary, memory, data structures)
@@ -61,4 +61,4 @@ The notes include:
 - Graph algorithms (BFS, DFS, Dijkstra, Prim)
 - Complexity theory and NP-completeness
 
-LaTeX source files are available in [`henry_notes_unofficial_accompaniment/`](henry_notes_unofficial_accompaniment/) for reference or modification.
+LaTeX source files are available in [`henry_notes/`](henry_notes/) for reference or modification.
