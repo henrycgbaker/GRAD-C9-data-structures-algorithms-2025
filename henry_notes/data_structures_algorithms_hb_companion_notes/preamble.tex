@@ -1,0 +1,98 @@
+% Consolidated preamble from all original DSA lecture files
+\documentclass[a4paper,11pt]{article}
+
+% Geometry and fonts
+\usepackage[top = 2.5cm, bottom = 2.5cm, left = 2.5cm, right = 2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Tables
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{booktabs}
+
+% Graphics and figures
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tikz}
+% \usepackage{animate} % Not available
+
+% Spacing and formatting
+\usepackage{setspace}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5\baselineskip plus 2pt minus 1pt}
+\raggedbottom  % Prevent vertical stretching to fill pages
+
+% Lists
+\usepackage{enumerate}
+\usepackage{enumitem}
+
+% Headers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\footnotesize Henry Baker}
+\rhead{\footnotesize Data Structures \& Algorithms - 2025 Notes for TAing Labs}
+\cfoot{\footnotesize \thepage}
+
+% Math
+\usepackage{amsmath}
+\usepackage{amssymb}  % For \mathbb, \checkmark
+\usepackage{amsthm}   % For \qed
+
+% Chapter compatibility for article class
+\newcommand{\chapter}[1]{\section{#1}}
+
+% Colors and boxes
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+% Box system for multi-level reading
+% Red box - Warnings, common mistakes, pitfalls
+\newtcolorbox{redbox}[1][NB!]{
+    colback=red!10!white,
+    colframe=red!80!black,
+    fonttitle=\bfseries,
+    title={#1},
+    sharp corners,
+    before upper={\parskip=0.5\baselineskip}
+}
+
+% Blue box - Key takeaways, formulas, quick reference
+\newtcolorbox{keybox}[1][Key Takeaway]{
+    colback=blue!5!white,
+    colframe=blue!75!black,
+    fonttitle=\bfseries,
+    title={#1},
+    sharp corners,
+    before upper={\parskip=0.5\baselineskip}
+}
+
+% Grey box - Formal definitions, proofs, rigorous detail
+\newtcolorbox{rigour}[1][Formal Definition]{
+    colback=gray!10!white,
+    colframe=gray!60!black,
+    fonttitle=\bfseries,
+    title={#1},
+    sharp corners,
+    before upper={\parskip=0.5\baselineskip}
+}
+
+% Algorithms - only algorithm2e (week05/06 use this)
+% week10's algorithmic-style needs converting - for now comment those out
+\usepackage[ruled,vlined]{algorithm2e}
+
+% Code listings
+\usepackage{listings}
+
+% Section formatting
+\usepackage{titlesec}
+
+% Text formatting
+\usepackage{ulem}
+
+% Hyperlinks
+\usepackage{hyperref}
+
+% Graphics path for images
+\graphicspath{{images/}}

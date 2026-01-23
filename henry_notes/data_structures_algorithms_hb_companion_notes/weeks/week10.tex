@@ -1,0 +1,1308 @@
+
+
+\thispagestyle{empty}
+\begin{tabular}{p{15.5cm}}
+{\large \bf DSA Lecture Notes 2024 \\ Henry Baker} \\
+\hline
+\end{tabular}
+
+\vspace*{0.3cm}
+\begin{center}
+	{\Large \bf DS\&A Lecture Notes: Wk 10\\ Greedy Algorithms }
+	\vspace{2mm}
+
+\end{center}
+\vspace{0.4cm}
+
+\section{Greedy Algorithm Outline}
+
+\begin{keybox}[Greedy Algorithms at a Glance]
+    Greedy algorithms build solutions incrementally, making the locally optimal choice at each step. They succeed when local optimality leads to global optimality-a property that must be proven for each specific problem.
+
+    \textbf{Key characteristics:}
+    \begin{enumerate}
+        \item Process input in a particular order (typically sorted by some criterion)
+        \item Make irrevocable decisions-once a choice is made, it is never reconsidered
+        \item Succeed when the \textbf{greedy choice property} holds
+    \end{enumerate}
+\end{keybox}
+
+The core principle of a greedy algorithm is to build up a solution piece by piece, always choosing the next piece that offers the most immediate benefit or is the most ``greedy''.
+
+This approach makes decisions from the given solution domain based on some local optimum criterion, hoping to find a global optimum by the end.
+
+\begin{tcolorbox}
+    \begin{enumerate}
+    \item \textbf{Processes input in a particular order} - typically sorted based on a certain criterion relevant to the problem!
+    \item \textbf{Makes irrevocable decisions}
+\end{enumerate}
+\end{tcolorbox}
+
+Greedy algorithms make \textbf{local optimum choices}.
+
+As a result, greedy algorithms \textbf{only succeed (find the global optimum solution) when they never make decisions that are irreversibly wrong}.
+
+It is the existence of an appropriate ordering criterion structure that lies behind success (/failure) of a greedy algorithm.
+
+\begin{rigour}[Greedy Choice Property]
+    A problem exhibits the \textbf{greedy choice property} if a globally optimal solution can be arrived at by making locally optimal (greedy) choices. More formally:
+
+    At each decision point, the choice that appears best at the moment can be extended to a globally optimal solution.
+
+    \textbf{To prove a greedy algorithm is correct}, one typically shows:
+    \begin{enumerate}
+        \item \textbf{Greedy choice property}: There exists an optimal solution that includes the greedy choice
+        \item \textbf{Optimal substructure}: After making the greedy choice, the remaining subproblem is also optimally solvable by the same greedy strategy
+    \end{enumerate}
+
+    Common proof techniques include:
+    \begin{itemize}
+        \item \textbf{Greedy stays ahead}: Show that at each step, the greedy solution is at least as good as any other
+        \item \textbf{Exchange argument}: Show any optimal solution can be transformed into the greedy solution without worsening it
+    \end{itemize}
+\end{rigour}
+
+There is no simple definition of a ``greedy'' algorithm. They are \textit{`myopic'}-they take action now, without worrying about the future.
+
+\begin{itemize}
+    \item \textbf{Greedy algorithms stay ahead:} involves proving that at each step of the algorithm, the solution is at least as good as, if not better than, any other possible solution up to that point.
+    \item \textbf{Structural:} rely on the structural properties of the problem. This means the problem must be structured in such a way that local optimisation leads to global optimisation.
+\end{itemize}
+
+\section{Cashier's Algorithm}
+
+\begin{keybox}[Cashier's Algorithm Summary]
+    \textbf{Problem}: Find the optimal way to give change using the fewest coins possible.
+
+    \textbf{Structure}: Sort coins by denomination amount (descending).
+
+    \textbf{Solution}: Repeatedly add the largest denomination coin that does not exceed the remaining amount.
+
+    \textbf{Complexity}: $O(k)$ where $k$ is the number of denominations (assuming amounts are bounded).
+
+    \textbf{Caveat}: Only optimal for certain coin systems (e.g., UK/US coins). Fails for arbitrary denominations.
+\end{keybox}
+
+\textbf{Problem:} optimal way to give change using the fewest coins possible.
+
+\textbf{Algorithm:} Adds the largest value coin that does not take us past the desired amount.
+
+\textbf{Structure:} sort coins by denomination amount.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{cashier's algo.png}
+    \caption{Cashier's algorithm pseudocode: greedily select the largest denomination that fits}
+    \label{fig:cashiers-algo}
+\end{figure}
+
+\textbf{Conditions:}
+
+Where this is optimal (correct + efficient) depends on the coin denominations. (See slides for examples of non-optimal solutions.)
+
+\begin{itemize}
+    \item $c_k$ = denomination of coin $k$
+    \item $N(c_k)$ = number of coins with value $c_k$
+\end{itemize}
+
+\begin{redbox}[When Greedy Fails for Coin Change]
+    The greedy algorithm for coin change is \textbf{not always optimal}. It depends entirely on the structure of the coin denominations.
+
+    \textbf{Counterexample}: Consider coins $\{1, 3, 4\}$ and target amount $6$.
+    \begin{itemize}
+        \item Greedy: $4 + 1 + 1 = 6$ (3 coins)
+        \item Optimal: $3 + 3 = 6$ (2 coins)
+    \end{itemize}
+
+    For arbitrary coin systems, dynamic programming is required to guarantee optimality.
+\end{redbox}
+
+\begin{rigour}[Conditions for Greedy Optimality in Coin Change]
+    The greedy algorithm is optimal when the coin denominations form a \textbf{canonical coin system}. Informally, this requires:
+
+    \begin{enumerate}
+        \item Each larger denomination $c_k$ should not be expressible as a sum of fewer smaller denomination coins
+        \item No combination of smaller coins provides a ``cheaper'' way (fewer coins) to make up any amount achievable with a single larger coin
+    \end{enumerate}
+
+    More precisely, the greedy algorithm is optimal if for all amounts $x$, the greedy solution uses no more coins than any other solution.
+
+    \textbf{Standard UK/US denominations} $\{1, 5, 10, 25, 100\}$ (or $\{1, 2, 5, 10, 20, 50, 100, 200\}$ for UK) satisfy these conditions.
+
+    The table below shows bounds on coin counts that any optimal solution must satisfy for US coins:
+\end{rigour}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Optimal solutions for coin change with US denominations must satisfy these bounds}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        $k$ & $c_k$ & All Optimal Solutions Must Satisfy & Max Value of $c_1, \ldots, c_{k-1}$ in Optimal Solution \\
+        \hline
+        1 & 1 & $N(1) \leq 4$ & - \\
+        2 & 5 & $N(5) \leq 1$ & $4$ \\
+        3 & 10 & $N(5) + N(10) \leq 2$ & $4 + 5 = 9$ \\
+        4 & 25 & $N(25) \leq 3$ & $20 + 4 = 24$ \\
+        5 & 100 & No limit & $75 + 24 = 99$ \\
+        \hline
+    \end{tabular}
+    \label{tab:coin_change}
+\end{table}
+
+The table captures the key insight: for US coins, you never need more than 4 pennies (because 5 pennies = 1 nickel), never more than 1 nickel (because 2 nickels = 1 dime), and so on. These bounds ensure that the greedy approach of always taking the largest coin works correctly.
+
+\section{Activity Selection (Earliest-Finish-Time-First Algorithm)}
+
+\begin{keybox}[Activity Selection Summary]
+    \textbf{Problem}: Select the maximum number of mutually compatible (non-overlapping) activities.
+
+    \textbf{Structure}: The finishing time is the crucial constraint-it determines how many subsequent activities can fit.
+
+    \textbf{Solution}: Sort activities by finish time; greedily select the next compatible activity.
+
+    \textbf{Complexity}: $O(n \log n)$ (dominated by sorting).
+
+    \textbf{Optimality}: Provably optimal via ``greedy stays ahead'' argument.
+\end{keybox}
+
+\subsection{Problem Setup: Interval Scheduling / Activity Selection}
+
+\begin{itemize}
+    \item Job $j$ starts at $s_j$ and finishes at $f_j$
+    \item Two jobs are compatible if they do not overlap
+    \item Goal: Find the largest subset of mutually compatible jobs
+\end{itemize}
+
+This equals selecting the maximum number of mutually compatible activities from a given set.
+
+This problem is significant in scenarios where you want to schedule jobs, tasks, or events such that they do not overlap in time, and the goal is to maximise the number of tasks that can be completed.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{interval scheduling.png}
+    \caption{Interval scheduling problem: select the maximum number of non-overlapping intervals}
+    \label{fig:interval-scheduling}
+\end{figure}
+
+\subsection{Solution: Earliest-Finish-Time-First Algorithm}
+
+\textbf{Structure:} Consider jobs in order of earliest finish time: i.e., ascending order of $f_j$.
+
+See counterexamples on slide for why other orderings (shortest job, earliest start, fewest conflicts) fail.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{earliest finish time first algo.png}
+    \caption{Earliest-finish-time-first algorithm pseudocode}
+    \label{fig:eftf-algo}
+\end{figure}
+
+\subsubsection{Process}
+\begin{enumerate}
+    \item \textbf{Sorting} - all activities by their finish times. This sorting is essential because it allows the greedy choice strategy.
+    \item \textbf{Selection}
+    \begin{itemize}
+        \item Starting with the first activity in the sorted list (the one that finishes the earliest), you select it for the schedule.
+        \item For each subsequent activity, you check if its start time $s_j$ is greater than or equal to the finish time $f_{j^*}$ of the last selected activity.
+    \end{itemize}
+\end{enumerate}
+
+\textit{NB: Job $j$ is compatible with $S$ iff $s_j \geq f_{j^*}$}
+
+\begin{redbox}[Key Intuition]
+    \textit{Having ordered by finish time}, if you know the finish time of the last selected job, the only thing you need to check is the start time of candidate jobs.
+\end{redbox}
+
+\subsection{Complexity Analysis}
+
+$O(n\log n)$
+\begin{enumerate}
+    \item \textbf{Sorting the activities by finish time} ($O(n \log n)$): Sorting is typically the most computationally intensive part of this algorithm.
+    \item \textbf{Iterating through the sorted activities} ($O(n)$): Once the activities are sorted, you only need to go through them once to determine which to include in the final selection (only comparison criterion is $s_j \geq f_{j-1}$). This iteration takes linear time, $O(n)$, since each activity is considered exactly once for inclusion.
+\end{enumerate}
+
+NB: The overall time complexity of the algorithm is dominated by the sorting step, making it $O(n \log n)$.
+
+\begin{keybox}[Complexity]
+    Earliest-finish-time-first algorithm: $O(n \log n)$
+\end{keybox}
+
+\subsection{Optimality}
+
+\begin{rigour}[Correctness of Earliest-Finish-Time-First]
+    \textbf{Claim}: The earliest-finish-time-first algorithm produces an optimal solution.
+
+    \textbf{Proof sketch} (Greedy Stays Ahead):
+
+    Let $i_1, i_2, \ldots, i_k$ be the activities selected by greedy (in order), and let $j_1, j_2, \ldots, j_m$ be activities in some optimal solution (also ordered by finish time).
+
+    We prove by induction that for all $r$: $f(i_r) \leq f(j_r)$.
+
+    \textbf{Base case}: $r = 1$. The greedy algorithm selects the activity with the earliest finish time, so $f(i_1) \leq f(j_1)$.
+
+    \textbf{Inductive step}: Assume $f(i_r) \leq f(j_r)$. Since $j_{r+1}$ is compatible with $j_r$ in the optimal solution, we have $s(j_{r+1}) \geq f(j_r) \geq f(i_r)$. Thus $j_{r+1}$ is also compatible with $i_r$. The greedy algorithm considers all activities compatible with $i_r$ and selects the one with the earliest finish time, so $f(i_{r+1}) \leq f(j_{r+1})$.
+
+    Since greedy ``stays ahead'' at each step, it must select at least as many activities as optimal: $k \geq m$. Thus greedy is optimal.
+\end{rigour}
+
+\textbf{Structure:} The reason greedy works here is that the finishing time is the crucial structure: the finishing time is what restricts the amount of jobs that can be run-this is the constraint.
+
+\textbf{Solution:} Sort jobs by finish time, at each point choose the next compatible job in the list.
+
+\begin{tcolorbox}
+    (Greedy algorithms generally have the structure where you sort by something, then crawl along the sorted list to select on some criteria.)
+\end{tcolorbox}
+
+\hrule
+
+\section{Interval Partitioning Problem (Resource Allocation)}
+
+\begin{keybox}[Resource Allocation Algorithm Summary]
+    \textbf{Problem}: Find the fewest number of resources (classrooms) to host intervals (lectures).
+
+    \textbf{Structure}: Compatible lectures to a given classroom depend on the \textit{current lecture's starting time} and \textit{all classrooms' finishing times}.
+
+    \textbf{Solution}: Sort jobs by \textit{start time}, assign the next job to a free classroom (or start a new one).
+
+    \textbf{Complexity}: $O(n \log n)$ using a priority queue for classroom availability.
+\end{keybox}
+
+\subsection{Problem Setup}
+
+\textbf{Objective}: Assign a set of intervals (lectures) to the minimum number of resources (classrooms) such that no two intervals overlap in the same resource.
+
+\textbf{Input:} A set of lectures, each defined by a start time $s_j$ and a finish time $f_j$.
+
+\textbf{Sorting:} (Unlike the earliest-finish-time-first approach used in activity selection) consider lectures in ascending order of their \textit{start times} $s_j$.
+
+\textbf{Room Allocation:}
+\begin{itemize}
+    \item Initialise an array or list of classrooms. Each classroom keeps track of the end time of the last lecture scheduled in that room.
+    \item For each lecture:
+    \begin{itemize}
+        \item Check available classrooms to find one where the last scheduled lecture finishes before the current lecture starts.
+        \item If such a classroom is found, assign the lecture there and update the classroom's finish time.
+        \item If no existing classroom can accommodate the lecture, open a new classroom, assign the lecture to it, and set its finish time.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Output:} The total number of classrooms used provides the solution to the problem.
+
+\subsection{Algorithm}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{earliest start time first algo.png}
+    \caption{Earliest-start-time-first algorithm for interval partitioning}
+    \label{fig:estf-algo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{interval partitioning incorrect.png}
+    \caption{Incorrect approach: not ordered by start time leads to suboptimal classroom usage}
+    \label{fig:interval-partition-incorrect}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{interval partitioning correct.png}
+    \caption{Correct approach: ordering by start time yields minimum classrooms}
+    \label{fig:interval-partition-correct}
+\end{figure}
+
+\begin{tcolorbox}
+    \textbf{Priority Queue}
+
+    A specialised data structure that operates much like a regular queue or list, but with an added feature: each element has a ``priority'' associated with it.
+
+    \begin{keybox}[Priority Queue Key Properties]
+        \begin{itemize}
+            \item Makes it easy to find a min or a max: $O(1)$
+            \item Think of it as a partial sorting of your data
+            \item Typically stored as a binary heap
+        \end{itemize}
+    \end{keybox}
+
+    \begin{enumerate}
+        \item \textbf{Find Maximum/Minimum}:
+        \begin{itemize}
+            \item \textbf{Complexity}: $O(1)$
+            \item \textbf{Description}: Returns only. Constant time because max (/min) element is always at a known position (e.g., the root of the heap).
+        \end{itemize}
+
+        \item \textbf{Delete Maximum/Minimum}:
+        \begin{itemize}
+            \item \textbf{Complexity}: $O(\log n)$
+            \item \textbf{Description}: Removes \& returns max (/min) priority element from queue. Logarithmic due to the need to reorganise the heap to maintain its properties after removal.
+        \end{itemize}
+
+        \item \textbf{Insert}:
+        \begin{itemize}
+            \item \textbf{Complexity}: $O(\log n)$
+            \item \textbf{Description}: Element is initially inserted at the lowest possible level of the heap and then ``bubbled up'' to restore heap order, takes log time.
+        \end{itemize}
+
+        \item \textbf{Increase Key} (/ Decrease Key for a min-heap):
+        \begin{itemize}
+            \item \textbf{Complexity}: $O(\log n)$
+            \item \textbf{Description}: Increases the priority of an element in the queue. After increasing, the heap order might be violated, so the element may need to be moved up in the tree, taking logarithmic time.
+        \end{itemize}
+
+        \item \textbf{Meld}:
+        \begin{itemize}
+            \item \textbf{Complexity}: $O(n)$
+            \item \textbf{Description}: Combines two priority queues into one, preserving the properties of the priority queue. This operation generally involves building a new heap from all the elements, which takes linear time.
+        \end{itemize}
+    \end{enumerate}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}
+    \textbf{How Priority Queues Work: Heaps}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{heap.png}
+        \caption{Binary heap structure: parent nodes satisfy heap property with children}
+        \label{fig:heap}
+    \end{figure}
+
+    Priority queues are often implemented using a \textbf{heap}, which is a complete binary tree where every parent node has a value greater than or equal to (in a max-heap) or less than or equal to (in a min-heap) the values of its children. This structure ensures that the element with the highest priority can always be found quickly.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{heap 2.png}
+        \caption{Binary heap stored as an array: children of node $i$ are at positions $2i+1$ and $2i+2$}
+        \label{fig:heap-array}
+    \end{figure}
+
+    \begin{itemize}
+        \item \textbf{Partial Sorting}: The heap does not fully sort its elements; it only partially sorts them to satisfy the heap property. This means that while the root node will always contain the maximum (or minimum) value, the rest of the tree does not necessarily follow a strict order.
+        \item \textbf{Tree Traversal}: Inserting or removing elements requires ``walking'' the tree-either up or down-to ensure the structure remains a valid heap.
+    \end{itemize}
+
+    \textbf{Implementation Details}
+
+    \begin{itemize}
+        \item \textbf{Binary Tree in an Array}: The binary tree is typically represented using an array. The children of the node at position $i$ in the array are found at positions $2i+1$ and $2i+2$, and the parent of any node (except the root) is found at position $\lfloor (i-1)/2 \rfloor$.
+        \item \textbf{Choice of Min or Max}: When designing a heap, you decide whether to make it a min-heap or a max-heap depending on whether you want quick access to the minimum or maximum element.
+    \end{itemize}
+\end{tcolorbox}
+
+\subsection{Complexity Analysis}
+
+\begin{enumerate}
+    \item \textbf{Sorting Lectures}:
+    \begin{itemize}
+        \item \textbf{Operation}: Sort all lectures by their \textit{start time} $s_j$.
+        \item \textbf{Complexity}: $O(n \log n)$, where $n$ is the number of lectures.
+        \item \textbf{Purpose}: This allows the algorithm to process lectures in the order they begin, facilitating efficient scheduling.
+    \end{itemize}
+
+    \item \textbf{Using a Priority Queue}: for \textit{classroom availability}
+    \begin{itemize}
+        \item \textbf{Operation}: Maintain a priority queue to keep track of the earliest time a classroom becomes available (keyed by finish times of lectures).
+        \item \textbf{Complexity for Various Operations}:
+        \begin{itemize}
+            \item \textbf{Inserting a New Classroom}: $O(\log n)$ for each operation.
+            \item \textbf{Scheduling a Lecture (Increase-key from $k$ to $f_j$)}: $O(\log n)$, necessary when a lecture is scheduled in an existing classroom to \textit{update the classroom's availability} time.
+            \item \textbf{Checking Classroom Availability (Find-minimum)} - check if lecture $j$ is compatible by comparing $s_j$ to \texttt{Find-minimum}: $O(1)$, to quickly find the earliest available classroom.
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Classroom Allocation}:
+    \begin{itemize}
+        \item \textbf{Operation}: For each lecture, use the priority queue to find the first available classroom that can accommodate it:
+        \begin{itemize}
+            \item If the classroom's finish time (from \texttt{Find-minimum}) is less than or equal to the lecture's start time, schedule the lecture in this classroom and update the finish time (\texttt{Increase-key}).
+            \item If no classroom is available, insert a new classroom into the priority queue.
+        \end{itemize}
+        \item \textbf{Complexity}: The total number of operations in the priority queue is proportional to $n$, with each operation taking $O(\log n)$.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Overall Complexity}
+
+\begin{itemize}
+    \item \textbf{Sorting}: $O(n \log n)$.
+    \item \textbf{Priority Queue Operations}:
+    \begin{itemize}
+        \item Total number of priority queue operations: $n$
+        \item Each takes $O(\log n)$
+
+        Each lecture involves a check (\texttt{Find-minimum}), potentially an \texttt{Increase-key}, and occasionally inserting a new classroom, each taking $O(\log n)$. With $n$ lectures, the total complexity of all priority queue operations collectively also sums up to $O(n \log n)$.
+
+    \end{itemize}
+    \item \textbf{Together: $O(n \log n)$}
+\end{itemize}
+
+\begin{keybox}[Complexity]
+    Earliest-start-time-first algorithm (interval partitioning): $O(n \log n)$
+\end{keybox}
+
+\subsection{Optimality}
+
+The \textbf{depth} of a set of open intervals refers to the maximum number of intervals that overlap at any single point in time.
+
+Here, the number of classrooms required is equal to the depth.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{optimality.png}
+    \caption{The depth (maximum overlap) provides a lower bound on classrooms needed; the greedy algorithm achieves this bound}
+    \label{fig:optimality}
+\end{figure}
+
+The algorithm efficiently utilises the minimum number of classrooms needed to accommodate all lectures without overlap, corresponding exactly to the theoretical minimum inferred from the intervals' depth.
+
+By using this algorithm, one can guarantee that no more resources (classrooms) than absolutely necessary are used.
+
+\begin{redbox}[Structure]
+    Having ordered by start time, we only need to compare the next item's start time against previous items' finish time(s) (made available through a priority queue).
+\end{redbox}
+
+\begin{rigour}[Correctness of Interval Partitioning]
+    \textbf{Claim}: Earliest-start-time-first never schedules two incompatible lectures in the same classroom, and uses the minimum number of classrooms.
+
+    \textbf{Proof}:
+    \begin{itemize}
+        \item Let $d$ be the number of classrooms the algorithm allocates.
+        \item Classroom $d$ is opened because we needed to schedule a lecture ($j$) that is incompatible with all $d-1$ other classrooms.
+        \item Therefore, these $d-1$ lectures each end after $s_j$.
+        \item We sorted by start-time, so the incompatible lectures start no later than $s_j$.
+        \item So we have $d$ overlapping lectures at time $s_j + \epsilon$.
+        \item This means the depth of the interval set is at least $d$, which is a lower bound on any solution.
+        \item Since our algorithm uses exactly $d$ classrooms, it is optimal.
+    \end{itemize}
+\end{rigour}
+
+\subsection{Summary}
+\begin{itemize}
+    \item \textbf{Problem}: Find the fewest number of classrooms to host lectures.
+    \item \textbf{Structure}: Compatible lectures to a given classroom depend on the current lecture's starting time and all classrooms' finishing times.
+    \item \textbf{Solution}: Sort jobs by start time, assign the next job to the free classroom (or start a new one).
+\end{itemize}
+
+\section{Greedy Algorithms on Graphs}
+
+We now turn to greedy algorithms that operate on graphs. The two classic examples are Dijkstra's algorithm for shortest paths and algorithms for finding minimum spanning trees.
+
+\section{Dijkstra's Algorithm}
+
+\begin{keybox}[Dijkstra's Algorithm Summary]
+    \textbf{Problem}: Find shortest path from source node $s$ to every other node.
+
+    \textbf{Structure}: The shortest edge between the explored and unexplored set is always a valid part of the solution.
+
+    \textbf{Solution}: Add the shortest edge between explored and unexplored set at each iteration.
+
+    \textbf{Complexity}: $O((m + n) \log n)$ with binary heap; $O(m + n \log n)$ with Fibonacci heap.
+
+    \textbf{Requirement}: All edge weights must be non-negative.
+
+    \textbf{Intuition}: This is essentially BFS for a weighted graph-because each weight/distance is unique, each node becomes its own level set.
+\end{keybox}
+
+\begin{redbox}[Non-Negative Weights Required]
+    Dijkstra's algorithm \textbf{requires all edge weights to be non-negative}. For graphs with negative edge weights, use the Bellman-Ford algorithm instead.
+
+    See the Wikipedia page for good visualisations of Dijkstra's algorithm in action.
+\end{redbox}
+
+\subsection{Problem Setup}
+
+\textbf{Single-pair/Single-source shortest path problem:}
+
+Given a directed graph $G=(V,E)$:
+\begin{itemize}
+    \item edge lengths/weights $l_e \geq 0$
+    \item source $s \in V$
+    \item destination $t \in V$
+\end{itemize}
+
+\textbf{Single-pair:} find shortest path $s \rightarrow t$
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{shortest path problem.png}
+    \caption{Single-pair shortest path problem: find the minimum-weight path from $s$ to $t$}
+    \label{fig:shortest-path}
+\end{figure}
+
+\textbf{Single-source:} find shortest path $s \rightarrow$ every node
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{single source.png}
+    \caption{Single-source shortest paths: Dijkstra's algorithm finds shortest paths from $s$ to all other nodes}
+    \label{fig:single-source}
+\end{figure}
+
+\subsection{Algorithm}
+
+\textbf{Intuition}: Maintain a set of explored nodes about which we know shortest paths from source to periphery; repeatedly expand that set by one node (the shortest edge between explored and unexplored).
+
+Essentially this is BFS, but where each level set is just 1 node, because distances are unique.
+
+\begin{enumerate}
+    \item \textbf{Initialisation}:
+    \begin{itemize}
+        \item Start with a set $S$ of explored nodes, initially containing only the source node $s$.
+        \item Initialise the distance to the source node $d[s]$ as 0, since the distance from a node to itself is zero.
+        \item For all other nodes $u$ in the graph, set the initial distances $d[u]$ to infinity, representing that they are initially unreachable from the source.
+    \end{itemize}
+
+    \item \textbf{Node Selection}: repeatedly choose a single unexplored node.
+    \begin{itemize}
+        \item In each iteration, select the node $v \notin S$ (i.e., a node not yet in the set of explored nodes) that minimises the sum of the distance from the source to a node $u$ in $S$ and the weight of the edge from $u$ to $v$.
+        \item This is expressed as:
+        \[
+        \pi(\textcolor{red}{v}) = \min_{e = (\textcolor{blue}{u},\textcolor{red}{v}): \textcolor{blue}{u \in S}} (\textcolor{green}{d[u]} + \textcolor{pink}{l_{e}})
+        \]
+        Where:
+        \begin{itemize}
+            \item \textcolor{blue}{$u$: An element we already know the shortest path to} \textcolor{green}{(with known length $d[u]$)}
+            \item \textcolor{red}{$v$: An element we do not yet know the shortest path to}
+            \item \textcolor{pink}{$l_e$: The weight of the edge from node $u$ to node $v$}
+        \end{itemize}
+    \end{itemize}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{dijkstra_1.png}
+        \caption{Considering adding node $v$ to the explored set $S$: we examine all edges crossing the frontier}
+        \label{fig:dijkstra-1}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{dijkstra_2.png}
+        \caption{The greedy choice: select the node $v$ that minimises $d[u] + l_{(u,v)}$ over all frontier edges}
+        \label{fig:dijkstra-2}
+    \end{figure}
+
+    \item \textbf{Update Distances}:
+    \begin{itemize}
+        \item Add the selected node $v$ to the set $S$.
+        \item Set $d[v]$ to $\pi(v)$, the calculated minimum distance.
+    \end{itemize}
+
+    \item \textbf{Path Recovery}:
+    \begin{itemize}
+        \item To reconstruct the shortest path from the source node to any other node $v$, maintain a predecessor (or parent) pointer $\text{pred}[v]$ for each node. Update $\text{pred}[v]$ to the node $u$ that achieved the minimum in $\pi(v)$.
+    \end{itemize}
+
+    \item \textbf{Termination}:
+    \begin{itemize}
+        \item The algorithm repeats the selection and update steps until all nodes are included in $S$, meaning that the shortest paths from the source to all nodes have been determined.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Key Points to Remember}
+
+\begin{itemize}
+    \item \textbf{Priority Queue}: To efficiently find the node that minimises $\pi(v)$, it is common to use a priority queue (often implemented as a min-heap). The priority queue holds all nodes not yet included in $S$, with priorities corresponding to their current shortest known distances $\pi[v]$.
+
+    \begin{redbox}[Clarification on $\pi[v]$]
+        The priority queue stores $\pi[v]$ values only for nodes adjacent to $S$ (the frontier). Nodes not yet adjacent to any explored node have $\pi[v] = \infty$. As $S$ grows, more nodes become adjacent and get finite $\pi[v]$ values.
+
+        Crucially, $\pi[v]$ is the \textit{best known} distance so far, not the true shortest distance (until $v$ is added to $S$).
+    \end{redbox}
+
+    \item \textbf{Edge Relaxation}: The operation of checking and updating the shortest path estimate $\pi[v]$ is known as \textit{relaxation}. For each neighbouring node $v$ of $u$, if $\pi[u] + l_{uv} < \pi[v]$, then update $\pi[v]$ to $\pi[u] + l_{uv}$ and set $\text{pred}[v] = u$.
+
+    \item \textbf{Complexity}: The computational complexity of Dijkstra's algorithm depends on the implementation. With a binary heap as the priority queue, the complexity is $O((V+E) \log V)$, where $V$ is the number of vertices and $E$ is the number of edges in the graph.
+\end{itemize}
+
+\subsection{Correctness}
+
+\begin{rigour}[Correctness of Dijkstra's Algorithm]
+    \textbf{Claim}: For each node $u \in S$, $d[u]$ is the length of the shortest $s \rightsquigarrow u$ path.
+
+    \textbf{Proof by induction on $|S|$}:
+
+    \textbf{Base Case}: When $S = \{s\}$, we have $d[s] = 0$, which is trivially correct (the shortest path from $s$ to itself has length 0).
+
+    \textbf{Inductive Step}: Assume the claim holds for all nodes currently in $S$. We show it holds when we add node $v$ to $S$.
+
+    Let $v$ be the node added to $S$ with $d[v] = \pi(v)$. Suppose for contradiction that there exists a shorter path $P$ from $s$ to $v$.
+
+    Let $(x, y)$ be the first edge in $P$ that crosses from $S$ to $V \setminus S$ (i.e., $x \in S$ and $y \notin S$).
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{path validation.png}
+        \caption{Path validation: if a shorter path $P$ existed, its first edge $(x,y)$ leaving $S$ would have been chosen instead of $(u,v)$}
+        \label{fig:path-validation}
+    \end{figure}
+
+    Then:
+    \begin{itemize}
+        \item By the inductive hypothesis, $d[x]$ is the true shortest distance to $x$.
+        \item The length of $P$ is at least $d[x] + l_{xy} + (\text{length from } y \text{ to } v)$.
+        \item Since edge weights are non-negative, length of $P \geq d[x] + l_{xy} \geq \pi(y)$.
+        \item But we chose $v$ because $\pi(v) \leq \pi(y)$ for all $y \notin S$.
+        \item So length of $P \geq \pi(y) \geq \pi(v) = d[v]$.
+    \end{itemize}
+
+    This contradicts the assumption that $P$ is shorter than $d[v]$. Therefore, $d[v]$ is the true shortest distance to $v$.
+\end{rigour}
+
+\subsection{Efficiency and Implementation}
+
+\textbf{Efficiency Improvements in Dijkstra's Algorithm}
+
+Efficiency improvements are achieved by using a \textit{priority queue} and \textit{maintaining a dynamic set of shortest path estimates $\pi[v]$ for each node $v$ not in $S$}.
+
+\textbf{Priority Queue and $\pi[v]$}
+
+The algorithm maintains $\pi[v]$ for each node $v$:
+\begin{itemize}
+    \item Priority queue stores unexplored nodes ($v \notin S$), using $\pi[\cdot]$ as priority keys.
+    \item For each, it explicitly maintains $\pi[v]$ instead of computing it directly.
+    \item Crucially initialising $\pi[v] = \infty$ for $v \neq s$.
+    \item Then we use the following update rule:
+\end{itemize}
+
+$$\pi[v] = \min(\pi[v], \pi[u]+l_e)$$
+
+This can also be expressed as:
+\[
+\pi[v] =
+\begin{cases}
+\pi[u] + l_e & \text{if there is an edge } (u,v) \text{ with } u \in S \text{ and } v \notin S \text{ of length } l_e \\
+\infty & \text{if } v \text{ is not adjacent to any } u \in S
+\end{cases}
+\]
+
+Meaning that:
+\begin{itemize}
+    \item We are effectively comparing newly estimated $\pi[v] = \pi[u] + l_e$ values for nodes now neighbouring $S$ vs all `far' / non-adjacent nodes valued at $\pi[v] = \infty$.
+    \item For each $v \notin S$, $\pi(v)$ can only decrease (because set $S$ increases).
+    \item Suppose $u$ is added to $S$, and there is an edge $e=(u,v)$ leaving $u$, then it suffices to use the above update rule.
+    \item Once $u$ is deleted from the queue, $\pi[u]$ = length of shortest $s \rightarrow u$ path.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Dijkstra algo.png}
+    \caption{Dijkstra's algorithm pseudocode with priority queue operations}
+    \label{fig:dijkstra-algo}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Initialisation}:
+    \begin{itemize}
+        \item For each node $v \neq s$, initialise $\pi[v] = \infty$ (indicating that the shortest path from $s$ to $v$ is unknown at the start).
+        \item For the source node $s$, $\pi[s] = 0$.
+    \end{itemize}
+
+    \item \textbf{Priority Queue Usage}:
+    \begin{itemize}
+        \item Nodes $v \notin S$ (i.e., nodes that have not been fully explored) are stored in a priority queue. The priority for each node is given by $\pi[v]$, which represents the \textit{best known} shortest path from $s$ to $v$ at any given time.
+        \item The node with the minimum $\pi[v]$ value is chosen next for exploration (using \texttt{Delete-min} operation).
+    \end{itemize}
+
+    \item \textbf{Updating $\pi[v]$}:
+    \begin{itemize}
+        \item When a node $u$ is added to $S$, for each outgoing edge $e = (u, v)$, update $\pi[v]$ if $\pi[u] + l_{uv} < \pi[v]$ where $l_{uv}$ is the weight of the edge from $u$ to $v$. This is done using the \texttt{Decrease-key} operation in the priority queue.
+        \item This ensures that $\pi[v]$ always holds the shortest path length from $s$ to $v$ that has been discovered so far.
+    \end{itemize}
+\end{enumerate}
+
+\begin{rigour}[Dijkstra's Algorithm Complexity]
+    \textbf{Priority Queue Operations}:
+    \begin{itemize}
+        \item \textbf{Insertion}: $O(\log n)$ - Inserting a node into the priority queue.
+        \item \textbf{Delete-min}: $O(\log n)$ - Removing the node with the smallest $\pi[v]$, which is the next node to be explored.
+        \item \textbf{Decrease-key}: $O(\log n)$ - Updating the priority of a node in the queue when a shorter path to it is found.
+    \end{itemize}
+
+    \textbf{Operation Counts}:
+    \begin{itemize}
+        \item Each of the $n$ nodes is inserted once and deleted once: $O(n)$ insertions and $O(n)$ delete-mins.
+        \item Each of the $m$ edges can trigger at most one decrease-key operation: $O(m)$ decrease-keys.
+    \end{itemize}
+
+    \textbf{Overall Complexity with Binary Heap}:
+    \[
+    O(n \log n + m \log n) = O((n + m) \log n)
+    \]
+
+    Since typically $m \geq n$ for connected graphs, this simplifies to $O(m \log n)$.
+
+    \textbf{With Fibonacci Heap}: Decrease-key is $O(1)$ amortised, giving:
+    \[
+    O(n \log n + m)
+    \]
+\end{rigour}
+
+\begin{keybox}[Dijkstra's Algorithm Complexity]
+    \begin{itemize}
+        \item \textbf{Binary Heap}: $O((n + m) \log n) = O(m \log n)$
+        \item \textbf{Fibonacci Heap}: $O(m + n \log n)$
+    \end{itemize}
+\end{keybox}
+
+\textbf{Implementation Variants}
+
+The efficiency can vary depending on the choice of priority queue:
+\begin{itemize}
+    \item \textbf{Binary Heap}: Provides $O(\log n)$ for key operations as discussed.
+    \item \textbf{Fibonacci Heap}: Can improve the \texttt{Decrease-key} operation to $O(1)$ amortised time, reducing the overall complexity to $O(m + n \log n)$.
+\end{itemize}
+
+\begin{tcolorbox}
+    Importance of priority queue for efficiency in Dijkstra's algorithm:
+    \begin{enumerate}
+        \item Streamlines the process of selecting the next node to explore.
+        \item Ensures that the algorithm efficiently progresses towards finding the shortest path by always considering the most promising unexplored node.
+    \end{enumerate}
+\end{tcolorbox}
+
+\subsection{Summary}
+\textbf{Problem}: Find shortest path from node $s$ to every other node.
+
+\textbf{Structure}: The shortest edge between explored and unexplored set is always a valid part of the solution.
+
+\textbf{Solution}: Add shortest edge between explored and unexplored set at each iteration.
+
+\textbf{This is basically BFS for a weighted graph}-because each weight/distance is unique, each node becomes its own level set.
+
+\section{Cycle-Cut Intersection}
+
+\begin{tcolorbox}
+    A \textbf{cut} is a partition of the nodes into two nonempty subsets, $S$ and $V \setminus S$, where $S \cap (V \setminus S) = \emptyset$.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{cut set.png}
+        \caption{A cut partitions the vertex set into two non-empty subsets}
+        \label{fig:cut-set}
+    \end{figure}
+
+    The \textbf{cutset} of a cut $S$ is the set of edges with exactly one endpoint in $S$.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{cutset2.png}
+        \caption{Cutset example: for cut $S = \{1, 3, 6, 7\}$, the cutset contains all edges crossing between $S$ and $V \setminus S$}
+        \label{fig:cutset-example}
+    \end{figure}
+\end{tcolorbox}
+
+\begin{keybox}[Cycle-Cut Intersection Property]
+    A cycle and a cutset intersect in an \textbf{even number of edges}.
+\end{keybox}
+
+\textbf{Intuition}: You have to go in and out of the cut set, so it will always be even.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Cycle-cut intersection.png}
+    \caption{Cycle-cut intersection: every cycle crosses a cutset an even number of times (entering and leaving)}
+    \label{fig:cycle-cut-1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{Cylce cut intersection 2.png}
+    \caption{Another example of cycle-cut intersection: the cycle enters and exits the cut region equally often}
+    \label{fig:cycle-cut-2}
+\end{figure}
+
+\section{Spanning Trees and Minimum Spanning Trees}
+
+\subsection{Spanning Tree: General Characteristics}
+
+A spanning tree of a graph $G = (V, E)$ is a subgraph $H = (V, T)$ where:
+\begin{itemize}
+    \item $V$ is the set of vertices, and $T$ is a subset of $E$, the set of edges from the original graph $G$.
+    \begin{itemize}
+        \item $V$ remains the same (all nodes included), but $T \subseteq E$
+    \end{itemize}
+    \item $H$ must satisfy two key properties:
+    \begin{enumerate}
+        \item \textbf{Acyclic}: $H$ does not contain any cycles.
+        \item \textbf{Connected}: $H$ includes all vertices of $G$ and there is a path between any pair of vertices in $H$.
+    \end{enumerate}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{spanning tree.png}
+    \caption{A spanning tree connects all vertices using a subset of edges, forming no cycles}
+    \label{fig:spanning-tree}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{spanning tree2.png}
+    \caption{Different spanning trees of the same graph: the same vertices connected by different edge subsets}
+    \label{fig:spanning-tree-2}
+\end{figure}
+
+\textbf{Characteristics of Spanning Trees}
+
+\begin{enumerate}
+    \item \textbf{Minimality}: The spanning tree is minimal with respect to the edges. It contains the minimum number of edges required to connect all the vertices, which is $|V| - 1$ edges for a connected graph with $|V|$ vertices.
+    \item \textbf{(Non-)Uniqueness}: The spanning tree is not necessarily unique. A graph may have multiple spanning trees, depending on the structure of the graph and the edges available.
+    \item \textbf{Maximum Spanning Trees (MSTs)}: In weighted graphs, you can further classify spanning trees as minimum or maximum spanning trees, where the sum of the edge weights is minimised or maximised, respectively.
+\end{enumerate}
+
+\textbf{Uses of Spanning Trees}
+
+\begin{itemize}
+    \item \textbf{Network Design}: In networking, spanning trees are crucial for designing efficient and loop-free networks. Protocols like the Spanning Tree Protocol (STP) are used in Ethernet networks to prevent loop formation by dynamically building spanning trees.
+    \item \textbf{Cluster Analysis}: In data science, algorithms that construct spanning trees can be used for clustering analysis, helping to identify natural groupings of data points by treating them as connected graphs.
+    \item \textbf{Optimisation}: Various optimisation problems involve finding spanning trees that minimise or maximise certain attributes, such as cost, distance, or time.
+\end{itemize}
+
+\textbf{Constructing a Spanning Tree (NB: NOT MST)}
+
+To construct a spanning tree from a graph:
+\begin{enumerate}
+    \item \textbf{Start from any vertex} if using a depth-first search (DFS) or breadth-first search (BFS) approach.
+    \item \textbf{Add edges one by one} while avoiding the creation of cycles and ensuring that every vertex gets connected.
+    \item \textbf{Stop when all vertices are included} and exactly $|V| - 1$ edges have been added.
+\end{enumerate}
+
+\begin{rigour}[Equivalent Characterisations of Spanning Trees]
+    For a subgraph $H = (V, T)$ of a connected graph $G = (V, E)$, the following are equivalent:
+
+    \begin{enumerate}
+        \item $H$ is a spanning tree (connected and acyclic)
+        \item $H$ is connected and has exactly $|V| - 1$ edges
+        \item $H$ is acyclic and has exactly $|V| - 1$ edges
+        \item $H$ is minimally connected (removing any edge disconnects it)
+        \item $H$ is maximally acyclic (adding any edge creates a cycle)
+    \end{enumerate}
+
+    \textbf{Properties that follow}:
+    \begin{itemize}
+        \item \textbf{Contains exactly $V - 1$ edges}: The minimum needed to connect $V$ vertices without cycles.
+        \item \textbf{Removal of any edge disconnects it}: Each edge is a bridge; there is no redundancy.
+        \item \textbf{Addition of any edge creates a cycle}: Any two nodes already have a unique path connecting them.
+    \end{itemize}
+\end{rigour}
+
+\subsection{Minimum Spanning Tree (MST)}
+
+\begin{keybox}[MST Definition]
+    Given a connected, undirected graph $G = (V, E)$ with edge costs $c_e$, a \textbf{Minimum Spanning Tree} $(V, T)$ is a spanning tree of $G$ such that the sum of the edge costs $\sum_{e \in T} c_e$ is minimised.
+\end{keybox}
+
+MSTs are useful in network design, clustering, and other applications where minimal cost connectivity must be maintained.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{MST.png}
+    \caption{A minimum spanning tree: the spanning tree with the smallest total edge weight}
+    \label{fig:mst}
+\end{figure}
+
+\textbf{Definition and Properties}
+
+\begin{itemize}
+    \item \textbf{Minimum Spanning Tree}: An MST is a subset of the edges of a connected, weighted graph that connects all the vertices together, without any cycles, and with the minimum possible total edge weight.
+    \item \textbf{Edge Costs}: In a weighted graph, each edge has an associated cost. The goal of the MST is to ensure that the sum of the costs of the edges included in the tree is minimised.
+\end{itemize}
+
+\textbf{Computational Challenge}
+
+\begin{itemize}
+    \item \textbf{Brute Force Feasibility}: As per \textbf{Cayley's theorem}, a complete graph on $n$ nodes has $n^{n-2}$ spanning trees. This exponential growth in the number of spanning trees makes brute force computation infeasible for anything but the smallest graphs. For example, even a modestly sized graph of 10 nodes would have over 100 million different spanning trees.
+\end{itemize}
+
+\textbf{Efficient Algorithms for MST}
+
+To find the MST, several efficient algorithms are commonly used:
+\begin{itemize}
+    \item \textbf{Kruskal's Algorithm}: Adds edges in order of increasing weight, using a disjoint-set (or union-find) data structure to ensure that no cycles are formed.
+    \item \textbf{Prim's Algorithm}: Starts with a single vertex and grows the MST one edge at a time, always choosing the minimum weight edge that adds a new vertex to the tree.
+    \item \textbf{Bor\r{u}vka's Algorithm}: Another approach that is effective especially in parallel computation contexts.
+\end{itemize}
+These algorithms typically run in $O(E \log E)$ or $O(E \log V)$ time, which is feasible for large graphs.
+
+\textbf{MST and the One-Nearest-Neighbour Graph}
+
+\begin{itemize}
+    \item \textbf{One-Nearest-Neighbour Graph}: A graph where each vertex is connected to its closest neighbour based on edge cost or some other metric.
+    \item \textbf{Important caveat}: An MST does not necessarily contain all the edges from a one-nearest-neighbour graph. The MST ensures overall minimal weight, which means it might skip over the nearest neighbour of a particular vertex if including a slightly more distant neighbour yields lower total cost.
+\end{itemize}
+
+\begin{tcolorbox}
+    \textbf{Q}: For which changes in the edge costs in graph $G$ will every Minimum Spanning Tree (MST) in $G$ also be an MST in the modified graph $G'$?
+    \begin{enumerate}
+        \item $\{c'_e = c_e + 17\}$:
+   Adding a constant value to each edge cost $c_e$ does not affect the relative ordering of edge costs. Therefore, the minimum spanning tree (MST) in the original graph $G$ will remain the same in the modified graph $G'$. All MSTs in $G$ will also be MSTs in $G'$.
+
+\item $\{c'_e = 17 \times c_e\}$:
+   Multiplying each edge cost $c_e$ by a constant factor $17$ changes the scale of the edge costs but maintains their relative ordering. Again, this does not change the structure of the MSTs in the graph. All MSTs in $G$ will still be MSTs in $G'$.
+
+ \item $\{c'_e = \log(c_e)\}$:
+   Taking the logarithm of the edge costs $c_e$ alters the scale of the costs but also preserves their relative ordering. The logarithm function is monotonic, meaning that it maintains the same order of values. Therefore, the structure of the MSTs will not change in the modified graph $G'$. All MSTs in $G$ will also be MSTs in $G'$.
+
+    \end{enumerate}
+ \textbf{All of the above.}
+
+In each case, the changes to the edge costs preserve the relative ordering of the costs. As long as something \textit{monotone} for defining distances between nodes, you are maintaining the MST (the person closest to me is always the person closest to me no matter what scale we use).
+
+\end{tcolorbox}
+
+\subsection{Fundamental Cycle}
+
+\begin{redbox}[Key Structure for MST Algorithms]
+    The fundamental cycle is one piece of structure that is leveraged in algorithms to find an MST.
+\end{redbox}
+
+When you have a spanning tree $H = (V, T)$ of a graph $G = (V, E)$, it includes all vertices and is acyclic.
+
+\begin{enumerate}
+    \item \textbf{Adding a Non-Tree Edge}: If you add an edge $e$ that is not part of the spanning tree $T$ (i.e., $e \in E$ but $e \notin T$), you will create a cycle. This cycle is unique to the addition of $e$ and is called a \textbf{fundamental cycle}.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{fundamental cycle.png}
+        \caption{Fundamental cycle: adding edge $e$ (not in tree $T$) creates exactly one cycle}
+        \label{fig:fundamental-cycle}
+    \end{figure}
+
+    \item \textbf{Properties}:
+    \begin{itemize}
+        \item Since $T$ is a tree and hence acyclic, adding $e$ to $T$ connects two nodes in $T$ that previously had exactly one path between them (since trees have a unique path between any two nodes). This addition forms a loop, thereby creating a cycle.
+    \end{itemize}
+
+    \item \textbf{Cycle-Based Spanning Tree Alteration}:
+    \begin{itemize}
+        \item If you want to maintain a spanning tree after adding $e$ and creating a cycle $C$, you can remove any other edge $f$ from $C$ (not necessarily the added edge $e$). The resulting graph $T \cup \{e\} - \{f\}$ will still be a spanning tree.
+    \end{itemize}
+
+    \item \textbf{Implication for MST}:
+    \begin{itemize}
+        \item If the weight $c_e$ of the added edge $e$ is less than the weight $c_f$ of any other edge $f$ in the cycle, then the original tree $T$ was not minimal, as replacing $f$ with $e$ results in a spanning tree with a smaller total weight.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Fundamental Cutset}
+
+\begin{redbox}[Second Key Structure for MST Algorithms]
+    The fundamental cutset is the second piece of structure that is leveraged in MST algorithms.
+\end{redbox}
+
+A fundamental cutset arises when considering the removal of an edge from a spanning tree:
+
+\begin{enumerate}
+    \item \textbf{Removing a Tree Edge}: If you remove an edge $f$ from the spanning tree $T$, the tree splits into two connected components. This division creates a \textbf{cutset}, which consists of all the edges that have one endpoint in each of the resulting components.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{fundamental cutset.png}
+        \caption{Fundamental cutset: removing edge $f$ splits the tree into two components; the cutset contains all edges crossing between them. If $c_e < c_f$, then $(V,T)$ was not an MST}
+        \label{fig:fundamental-cutset}
+    \end{figure}
+
+    \item \textbf{Cutset-Based Spanning Tree Alteration}:
+    \begin{itemize}
+        \item Adding any edge $e$ from this cutset back to the tree (replacing $f$) will reconnect the two components without creating a cycle, thus forming another spanning tree.
+    \end{itemize}
+
+    \item \textbf{Implication for MST}:
+    \begin{itemize}
+        \item If any edge $e$ in the cutset has a lower weight than $f$, then again, $T$ was not minimal. Replacing $f$ with $e$ would yield a spanning tree with a lower total weight.
+    \end{itemize}
+\end{enumerate}
+
+Both fundamental cycles and cutsets provide mechanisms to explore alternative spanning trees and are particularly useful in optimising and adjusting existing trees. They are central to algorithms like \textbf{Kruskal's} and \textbf{Prim's} for finding MSTs, where decisions about edge inclusion or exclusion are made based on the properties of these cycles and cutsets.
+
+\subsection{Greedy Algorithm to Find MST: Red-Blue Rules}
+
+\begin{rigour}[Cut Property for MST]
+    \textbf{Cut Property}: For any cut $S$ of the graph, the minimum weight edge $e$ crossing the cut is in \textit{some} MST.
+
+    \textbf{Proof}: Suppose $e = (u, v)$ is the minimum weight edge crossing cut $S$, and suppose $T$ is an MST that does not contain $e$. Since $T$ is a spanning tree, there is a unique path from $u$ to $v$ in $T$. This path must cross the cut $S$ at some edge $f \neq e$ (since $u \in S$ and $v \notin S$).
+
+    Consider $T' = T \cup \{e\} - \{f\}$. This is still a spanning tree (we added one edge and removed one from the resulting cycle). Since $c_e \leq c_f$ (as $e$ is the minimum crossing the cut), we have $\text{cost}(T') \leq \text{cost}(T)$. Since $T$ was an MST, $T'$ is also an MST, and it contains $e$.
+\end{rigour}
+
+\begin{rigour}[Cycle Property for MST]
+    \textbf{Cycle Property}: For any cycle $C$ in the graph, the maximum weight edge $e$ in $C$ is in \textit{no} MST (assuming unique edge weights).
+
+    \textbf{Proof}: Suppose $e$ is the maximum weight edge in cycle $C$, and suppose $T$ is an MST containing $e$. Removing $e$ from $T$ creates two components. Since $C$ is a cycle containing $e$, there must be another edge $f \in C$ connecting these two components.
+
+    Consider $T' = T - \{e\} \cup \{f\}$. This is still a spanning tree. Since $c_f < c_e$ (as $e$ is the maximum in the cycle), we have $\text{cost}(T') < \text{cost}(T)$, contradicting that $T$ was an MST.
+\end{rigour}
+
+These properties lead to the \textbf{Red-Blue algorithm}:
+
+\textcolor{red}{\textbf{Red Rule: Max Cost in a Cycle $\rightarrow$ prevents cycles}}
+    \begin{itemize}
+        \item Let $C$ be a cycle with no red edges.
+        \item Select an uncoloured edge of $C$ of max cost, colour it red.
+    \end{itemize}
+\textcolor{blue}{\textbf{Blue Rule: Min Cost in a Cutset $\rightarrow$ encourages connectivity \& minimisation}}
+\begin{itemize}
+    \item Let $D$ be a cutset with no blue edges.
+    \item Select an uncoloured edge in $D$ of min cost, colour it blue.
+\end{itemize}
+\textbf{Overall}:
+\begin{itemize}
+    \item Apply \textcolor{red}{red} and \textcolor{blue}{blue} rules until all edges are coloured.
+    \item The \textcolor{blue}{blue edges form an MST}!
+    \item Terminate when $n-1$ edges are blue.
+\end{itemize}
+
+\textit{These are the fundamental building blocks for any spanning tree optimisation process; the choice between rules to apply gives different algorithms!}
+
+\textcolor{red}{\textbf{Red Rule: Max Cost in a Cycle}}
+\begin{itemize}
+    \item \textbf{Purpose}: Prevents the creation of cycles within the eventual MST. By colouring the max cost edge in any cycle red, the rule effectively ensures that this edge will \textbf{not be included} in the MST.
+    \item \textbf{Operation}: Whenever a cycle is formed or identified in the graph, and it contains uncoloured edges, the red rule selects the uncoloured edge with the maximum cost and colours it red. This edge is thereby excluded from consideration for inclusion in the MST.
+\end{itemize}
+
+\textcolor{blue}{\textbf{Blue Rule: Min Cost in a Cutset}}
+
+\begin{itemize}
+    \item \textbf{Purpose}: Encourages connectivity and minimisation of the spanning tree's weight by adding the minimum cost edges from cutsets.
+    \begin{itemize}
+        \item Leverages the concept of the fundamental cutset, where removing a tree edge creates two components; the lowest cost edge that reconnects these components is crucial for maintaining a minimal structure.
+    \end{itemize}
+    \item \textbf{Operation}: In any cutset that forms from the current set of tree edges (i.e., the edges included in the MST construction so far), the rule selects the uncoloured edge with the minimum cost and colours it blue. These blue edges are then \textbf{candidates for inclusion in the MST}.
+\end{itemize}
+
+\textbf{Algorithm Progression}
+
+\begin{itemize}
+    \item \textbf{Application of Rules}: The algorithm alternates between these two rules, systematically colouring edges and effectively deciding which edges are included in the MST (blue) and which are not (red). This approach will incrementally build up the MST by adding the necessary connections (blue edges) while avoiding unnecessary, costly cycles (red edges).
+    \item \textbf{Termination}: The process continues until all edges are coloured or, more precisely, \textbf{until $n - 1$ edges are coloured blue} for a graph with $n$ vertices, at which point an MST has been formed.
+    \begin{itemize}
+        \item Remember from before: a spanning tree has $V-1$ edges.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Key Points}
+
+\begin{itemize}
+    \item \textbf{Difference in Algorithms}: The choice of when to apply each rule can vary, leading to different algorithms or variations in the order in which edges are evaluated and coloured. This flexibility can affect the intermediate steps but will generally lead to the same MST assuming all edges are considered appropriately.
+    \item \textbf{Greedy Strategy}: Both rules embody the greedy methodological framework-making the most cost-effective choice available at each step.
+    \begin{itemize}
+        \item \textcolor{blue}{Blue rule directly selects the minimum cost edge from cutsets to ensure minimal connection costs.}
+        \item \textcolor{red}{Red rule avoids costly cycles by removing the most expensive link from consideration.}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Prim's Algorithm}
+
+Prim's algorithm is a special case of the greedy algorithm that repeatedly applies the \textcolor{blue}{blue rule}.
+
+\begin{keybox}[Prim's Algorithm Summary]
+    \textbf{Problem}: Find the minimum spanning tree of a weighted, connected graph.
+
+    \textbf{Strategy}: Grow the MST from a single starting vertex by repeatedly adding the minimum-weight edge that connects a vertex in the tree to a vertex outside.
+
+    \textbf{Complexity}: $O(m \log n)$ with binary heap; $O(m + n \log n)$ with Fibonacci heap.
+
+    \textbf{Key insight}: This is essentially Dijkstra's algorithm, but instead of tracking distance from source, we track the minimum edge weight to connect to the growing tree.
+\end{keybox}
+
+\begin{enumerate}
+    \item \textbf{Initialisation}: ($S=\{s\}$ for any node $s$, $T=\emptyset$)
+    \begin{itemize}
+        \item Start with a set $S$ containing a single arbitrary node $s$ from the graph. This node serves as the starting point for the MST.
+        \item Initialise $T$, the set of edges in the MST, to be empty.
+    \end{itemize}
+
+    \item \textbf{Algorithm Execution}:
+    \begin{enumerate}
+        \item Add to $T$ a min-cost edge with exactly one endpoint in $S$.
+        \item Add the other endpoint to $S$.
+        \item Repeat $n-1$ times.
+    \end{enumerate}
+    \begin{itemize}
+        \item \textbf{Repeat} $n - 1$ times, where $n$ is the number of vertices in the graph:
+        \begin{itemize}
+            \item From the set of edges that have one endpoint in $S$ (the set of nodes already included in the MST) and one endpoint not in $S$, select the edge $(u, v)$ that has the minimum cost and where $u \in S$ and $v \notin S$.
+            \item Add this minimum cost edge to $T$.
+            \item Add the endpoint $v$ (not previously in $S$) to $S$.
+        \end{itemize}
+        \item This step ensures that in each iteration, the tree grows by one edge and one vertex, gradually covering all vertices by connecting the least costly edge to the growing tree.
+    \end{itemize}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{prims algo vizual.png}
+        \caption{Prim's algorithm visualisation: the tree (blue) grows by adding the minimum-weight edge to an unexplored vertex}
+        \label{fig:prims-visual}
+    \end{figure}
+
+    \item \textbf{Termination}:
+    \begin{itemize}
+        \item The algorithm stops after adding $n - 1$ edges since a spanning tree for a graph with $n$ vertices always contains $n - 1$ edges.
+    \end{itemize}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{prim's algo.png}
+    \caption{Prim's algorithm pseudocode: similar structure to Dijkstra but tracking edge costs rather than path distances}
+    \label{fig:prims-algo}
+\end{figure}
+
+\textbf{Implementation Details}
+
+\begin{itemize}
+    \item \textbf{Priority Queue}:
+    \begin{itemize}
+        \item A \textit{dynamic} priority queue is crucial for efficiently retrieving the minimum cost edge at each step.
+        \item The priority queue typically stores \textbf{all the edges crossing the cut} (edges with one endpoint in $S$ and the other not in $S$).
+        \item Update priorities (edge costs) as new vertices are added to $S$.
+        \item When a vertex is added to $S$, all new edges connecting this vertex to any vertices outside $S$ need to be considered for addition to the priority queue, or the priorities need updating if they already exist in the queue.
+    \end{itemize}
+
+    \item \textbf{Complexity}:
+    \begin{itemize}
+        \item The running time primarily \textbf{depends} on how the priority queue is implemented.
+        \item With a \textbf{binary heap}, the complexity is $O(m \log n)$, where $m$ is the number of edges and $n$ is the number of vertices. Each edge insertion and extraction operation (insert and delete-min) takes logarithmic time.
+        \item If an advanced priority queue structure like a \textbf{Fibonacci heap} is used, the complexity can be reduced further, especially in terms of the decrease-key operations, which are more efficient in such structures.
+    \end{itemize}
+\end{itemize}
+
+\begin{rigour}[Prim's Algorithm Complexity]
+    \textbf{Operations}:
+    \begin{itemize}
+        \item Each vertex is added to $S$ exactly once: $n$ delete-min operations.
+        \item Each edge is examined at most twice (once from each endpoint): $O(m)$ decrease-key or insert operations.
+    \end{itemize}
+
+    \textbf{With Binary Heap}:
+    \[
+    O(n \log n + m \log n) = O(m \log n)
+    \]
+    (since $m \geq n - 1$ for connected graphs)
+
+    \textbf{With Fibonacci Heap}:
+    \[
+    O(n \log n + m) = O(m + n \log n)
+    \]
+\end{rigour}
+
+\textbf{Comparison with Dijkstra's Algorithm}
+
+\begin{itemize}
+    \item \textbf{Similarities}:
+    \begin{itemize}
+        \item Both algorithms use a priority queue to manage vertices/edges.
+        \item Both grow a set starting from a single vertex by adding the ``cheapest'' next step to a growing structure (the shortest path tree for Dijkstra's, the MST for Prim's).
+    \end{itemize}
+
+    \item \textbf{Differences}:
+    \begin{itemize}
+        \item Dijkstra's algorithm tracks \textbf{distance from the source vertex} to all other vertices, adjusting path lengths based on newly discovered paths.
+        \item Prim's algorithm tracks \textbf{minimum edge weight to connect} to the tree-it is solely concerned with expanding the MST by connecting the nearest vertex not yet in the tree at each step, without reconsidering previously made decisions.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Kruskal's Algorithm}
+
+(Skipped in lectures)
+
+Kruskal's algorithm is another greedy MST algorithm that applies the blue rule differently:
+\begin{enumerate}
+    \item Sort all edges by weight (ascending).
+    \item For each edge in order: if it connects two different components (does not create a cycle), add it to the MST.
+    \item Use a union-find data structure to efficiently check connectivity.
+\end{enumerate}
+
+Complexity: $O(m \log m) = O(m \log n)$ (dominated by sorting).
+
+\subsection{MSTs in Experimental Design}
+
+\textbf{Building a Similarity Graph}
+
+\begin{enumerate}
+    \item \textbf{Data Representation}:
+    \begin{itemize}
+        \item Consider each unit (subject, plot of land, etc.) as a vertex in a graph.
+        \item Calculate distances or dissimilarities between all pairs of units based on relevant characteristics or measurements. These characteristics could be baseline variables like pre-treatment measurements, demographic information, or other relevant metrics.
+    \end{itemize}
+
+    \item \textbf{Edge Weights}:
+    \begin{itemize}
+        \item The edges between any two vertices (units) in this graph are weighted by their similarity or dissimilarity. For example, weights could be calculated using a distance measure that reflects how different the units are from each other. The weight might be a simple Euclidean distance for quantitative measurements, or more complex measures tailored to the data, such as kernel-based distances.
+    \end{itemize}
+
+    \item \textbf{Kernel Matrix}:
+    \begin{itemize}
+        \item A kernel matrix can be used to represent similarities or dissimilarities among all pairs of units. This matrix can then be transformed into a graph, where each element represents the weight of the edge between two nodes.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Using MST for Group Assignment}
+
+\begin{enumerate}
+    \item \textbf{Constructing the MST}:
+    \begin{itemize}
+        \item Use an algorithm (like Prim's or Kruskal's) to construct an MST from this weighted graph.
+        \item The MST will connect all the units in such a way that the total dissimilarity (or similarity) is minimised without forming any loops.
+    \end{itemize}
+
+    \item \textbf{Binary Spanning Tree (BST) for Treatment and Control}:
+    \begin{itemize}
+        \item Once the MST is constructed, it can be utilised to split the units into treatment and control groups.
+        \item A simple method might involve choosing a starting node and alternating assignments along the tree, ensuring that connected nodes (likely similar to each other) are assigned to different groups to balance the characteristics across groups.
+        \item Alternatively, more complex rules might be applied to decide splits based on optimising certain balance metrics.
+    \end{itemize}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{MST in Experimental Design.png}
+    \caption{Using MST for experimental design: similar units (connected in the MST) are assigned to different treatment groups to ensure balance}
+    \label{fig:mst-experimental}
+\end{figure}
+
+\textbf{Advantages of Using MST in Experimental Design}
+
+\begin{itemize}
+    \item \textbf{Balance and Similarity}: MSTs help in achieving a high degree of balance between treatment and control groups by leveraging the inherent structure of the data.
+    \item \textbf{Reduction of Bias}: By carefully constructing groups that minimise internal dissimilarity, the influence of confounding variables is reduced, leading to more reliable and valid results.
+    \item \textbf{Flexibility}: This method can be adapted to various types of data and different measures of similarity or dissimilarity, making it versatile across disciplines.
+\end{itemize}
+
+\subsection{Summary: Minimum Spanning Trees}
+
+\begin{keybox}[MST Summary]
+    \textbf{Problem}: Find the \textit{connected}, \textit{acyclic} subgraph (spanning tree) with the lowest total edge cost.
+
+    \textbf{Structure being leveraged}:
+    \begin{itemize}
+        \item Fundamental cycles and fundamental cutsets
+        \item Cut property: min-weight edge crossing any cut is in some MST
+        \item Cycle property: max-weight edge in any cycle is in no MST
+    \end{itemize}
+
+    \textbf{Solution}: Iteratively apply:
+    \begin{itemize}
+        \item \textcolor{red}{Red rule (cycle property)}: Exclude max-cost edge in cycles
+        \item \textcolor{blue}{Blue rule (cut property)}: Include min-cost edge in cutsets
+    \end{itemize}
+
+    \textbf{Algorithms}:
+    \begin{itemize}
+        \item \textbf{Prim's}: Grow tree from one vertex (repeated blue rule)
+        \item \textbf{Kruskal's}: Sort edges, add if no cycle (combines both rules)
+    \end{itemize}
+
+    \textbf{Complexity}: $O(m \log n)$ for both algorithms with standard data structures.
+\end{keybox}
+
+\textbf{Problem}: Find the \textit{connected}, \textit{acyclic} subgraph with the lowest total cost.
+
+\textbf{Structure being leveraged in MST algorithms}:
+\begin{itemize}
+    \item Fundamental cycles \& Fundamental cutsets
+    \item Allows for greedy steps to change one spanning tree into a `smaller' spanning tree.
+\end{itemize}
+
+\textbf{Solution}: Iteratively find \textcolor{red}{fundamental cycles (find a non-element of the MST)} or \textcolor{blue}{fundamental cutsets (find an element of the MST)}.

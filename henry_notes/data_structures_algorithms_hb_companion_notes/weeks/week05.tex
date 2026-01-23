@@ -1,0 +1,566 @@
+
+\thispagestyle{empty}
+\begin{tabular}{p{15.5cm}}
+{\large \bf DSA Lecture Notes 2024 \\ Henry Baker} \\
+\hline
+\\
+\end{tabular}
+
+\vspace*{0.3cm}
+\begin{center}
+	{\Large \bf Data Structures \& Algorithms: Wk 5\\ Basics of Algorithm Analysis}
+	\vspace{2mm}
+
+\end{center}
+\vspace{0.4cm}
+
+\section{Analysis I: Correctness \& Efficiency}
+
+When analysing any algorithm, we ask two fundamental questions:
+
+\begin{enumerate}
+    \item \textbf{Correctness}
+    \begin{itemize}
+        \item Does the algorithm produce the correct output for all valid inputs?
+        \item Can we guarantee that the assignment we generate is stable?
+    \end{itemize}
+    \item \textbf{Efficiency}
+    \begin{itemize}
+        \item Can we generate the assignment quickly?
+        \item Can we do so without using up too much storage space?
+        \item How does performance scale as input size grows?
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Constant Time Operations}
+
+How do we define `fast'? The key concept is \textbf{constant time complexity}, denoted $O(1)$.
+
+\begin{rigour}[Constant Time - $O(1)$]
+An operation has \textbf{constant time complexity} if it takes a fixed amount of time (a fixed number of operations) to complete, regardless of the size of the data structure involved.
+
+More precisely, an operation is $O(1)$ if there exists a constant $c > 0$ such that the operation completes in at most $c$ steps for any input size $n$.
+\end{rigour}
+
+In this context, `fast' means that the operation's time will be negligible and largely unaffected by the scale of data. Different data structures have different efficiencies-they are fast at different operations.
+
+\begin{keybox}[Why Constant Time Matters]
+When building efficient algorithms, we want each individual operation within a loop to be $O(1)$. This allows us to focus solely on \emph{how many times} the loop executes (as a function of $n$), rather than worrying about the cost of each iteration varying with input size.
+\end{keybox}
+
+\subsubsection{Arrays: Fast Random Access}
+
+\begin{tcolorbox}
+    \textbf{Arrays} store elements in \textbf{contiguous} memory locations.
+
+    \textit{Fast:} Retrieving an element by index (random access) \\
+    \textit{Slow:} Adding or removing elements (especially in the middle)
+
+    \textbf{Why Array Indexing is $O(1)$}
+
+    Retrieving data from an array given an index requires just a few fixed steps:
+    \begin{enumerate}
+        \item Get the memory location of the first element (base address)
+        \item Add the index value to that memory location (simple arithmetic)
+        \item Load data from the computed memory location
+    \end{enumerate}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{array pull.png}
+        \caption{Array indexing: computing the memory address of element $i$ requires only adding the index to the base address-a constant-time operation regardless of array size.}
+        \label{fig:array-indexing}
+    \end{figure}
+
+    \textbf{The size of the array doesn't matter}: accessing element 5 in a 10-element array takes the same time as accessing element 5 in a 10-million-element array. It's just one addition operation.
+
+    \textbf{But other operations are slow:}
+    \begin{itemize}
+        \item \textbf{Adding an element:} Arrays have fixed allocated memory. To add beyond capacity, you must allocate a new larger array and copy all elements-$O(n)$ in the worst case.
+        \item \textbf{Removing an element:} Removing from anywhere but the end requires shifting all subsequent elements to fill the gap-also $O(n)$.
+    \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Queues: Fast Head/Tail Operations}
+
+\begin{tcolorbox}
+    \textbf{Queues} operate on the First In, First Out (FIFO) principle-you only ever interact with the head (front) and tail (back).
+
+    \textit{Fast:} Adding to tail (enqueue), removing from head (dequeue) \\
+    \textit{Slow:} Accessing an arbitrary element in the middle
+
+    \textbf{Why Enqueue/Dequeue are $O(1)$}
+
+    Both operations require just a few fixed steps:
+    \begin{enumerate}
+        \item Find the head/tail pointer
+        \item Load/store data at the location pointed to by the pointer
+        \item Update the pointer
+    \end{enumerate}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{queue.png}
+        \caption{Queue operations: enqueue adds to the tail, dequeue removes from the head. Both operations only interact with the endpoints via pointers, making them $O(1)$ regardless of queue length.}
+        \label{fig:queue-operations}
+    \end{figure}
+
+    \textbf{Size independence:} The queue's length doesn't affect these operations-we're only interacting with the endpoints, not traversing the structure.
+
+    \textbf{But accessing arbitrary elements is slow:} Finding or removing an element in the middle requires iterating through the queue from the head-$O(n)$ in the worst case.
+\end{tcolorbox}
+
+\begin{keybox}[Arrays vs Queues: Complementary Strengths]
+\begin{itemize}
+    \item \textbf{Arrays} are fast ($O(1)$) at accessing \textbf{arbitrary} elements when the index is known (random access)
+    \item \textbf{Queues} are fast ($O(1)$) at accessing/modifying the \textbf{first/last} element without needing to know indices
+\end{itemize}
+
+\textit{Arrays excel at the middle (random access); Queues excel at the ends (sequential processing).}
+
+This complementarity is crucial for algorithm design: choosing the right data structure for each operation ensures that each step runs in constant time.
+\end{keybox}
+
+
+\section{Analysis II: Big O Notation}
+
+Big O notation describes the upper bound of the runtime complexity of an algorithm as a function of the input size $n$. It captures the \textbf{worst-case} growth rate-it's deliberately conservative.
+
+\begin{rigour}[Big O Notation - Formal Definition]
+A function $T(n)$ is $O(f(n))$ if there exist constants $c > 0$ and $n_0 > 0$ such that for all $n > n_0$:
+\[
+T(n) \leq c \cdot f(n)
+\]
+
+\textbf{Unpacking this definition:}
+\begin{itemize}
+    \item $T(n)$ is the \emph{actual} runtime (or operation count) of the algorithm
+    \item $f(n)$ is a \emph{simpler} reference function (e.g., $n$, $n^2$, $\log n$)
+    \item The constants $c$ and $n_0$ are `slack'-we don't care about small inputs or constant factors
+    \item The inequality must hold for all $n$ beyond some threshold $n_0$
+\end{itemize}
+
+\textbf{Intuition:} From some point onwards, the true runtime $T(n)$ is bounded above by some constant multiple of $f(n)$. We're capturing the \emph{order of magnitude} of growth, not the exact value.
+\end{rigour}
+
+Big O embeds the idea that what we care about is the big picture: how does runtime scale as $n$ gets large? The constants don't matter-they're implementation details (hardware speed, programming language, etc.).
+
+\begin{redbox}[Efficiency Criterion]
+\textbf{An algorithm is `efficient' if its worst-case runtime grows at a polynomial rate as the input size $n$ increases.}
+
+Polynomial growth ($n^k$ for constant $k$) is considered tractable. Exponential growth ($r^n$ for $r > 1$) quickly becomes impractical for large inputs.
+\end{redbox}
+
+\subsection{Why We Drop Constants}
+
+\textbf{With correct implementation, each iteration takes constant time ($K$ operations):}
+\begin{itemize}
+    \item We set an upper bound on iterations: no more than $n^k$ iterations (where $k$ depends on the algorithm)
+    \item So total operations: no more than $K \times n^k$
+\end{itemize}
+
+Ultimately, we don't care what this constant $K$ is:
+\begin{itemize}
+    \item $K$ is `too deep'-it involves the exact operations of the computer, compiler optimisations, cache behaviour, etc.
+    \item $n$ is what we can change and what varies by data input
+\end{itemize}
+
+This is why we drop constants in Big O notation.
+
+\subsection{Choosing the Dominant Term}
+
+When expressing Big O, we keep only the highest-order term:
+
+\textbf{Example 1:}
+\[T(n) = 32n^2 + 17n + 32\]
+\begin{itemize}
+    \item $T(n)$ is $O(n^2)$
+    \item It's also technically $O(n^3)$, $O(n^4)$, etc.-Big O is an upper bound-but we want the most informative (tightest) bound.
+\end{itemize}
+
+\textbf{Example 2:}
+\[S(n) = n \cdot T(n-1)\]
+\begin{itemize}
+    \item Given $T(n) = O(n^2)$ above, $S(n)$ is $O(n^3)$
+\end{itemize}
+
+\textbf{Example 3:}
+\[ T(n) = 36n^2 + 5n + 1034 \log n + 7834n \log n \]
+\begin{itemize}
+    \item $T(n)$ is $O(n^2)$ (since $n^2$ dominates $n \log n$)
+\end{itemize}
+
+\textbf{Example 4:}
+\[
+T(n) = 12n + 0.00001 \cdot \exp(n) + n \log n
+\]
+\begin{itemize}
+    \item $T(n)$ is $O(\exp(n))$ (exponential dominates all polynomial terms, no matter how small the constant)
+\end{itemize}
+
+\subsection{Common Families of Complexity}
+
+\begin{rigour}[Complexity Hierarchy]
+From fastest to slowest growth (for large $n$):
+\[
+O(1) \subset O(\log n) \subset O(n) \subset O(n \log n) \subset O(n^2) \subset O(n^k) \subset O(2^n) \subset O(n!)
+\]
+\end{rigour}
+
+\subsubsection{Constant Time - $O(1)$}
+\begin{itemize}
+    \item Operations that don't depend on input size
+    \item Examples: array indexing, hash table lookup (average case), stack push/pop
+\end{itemize}
+
+\subsubsection{Logarithmic Time - $O(\log n)$}
+\begin{itemize}
+    \item For every $d > 0$: $\log n = O(n^d)$ (logarithms grow slower than any polynomial)
+    \item \textbf{Base doesn't matter:} $O(\log_a n) = O(\log_b n)$ because change of base introduces only a constant factor: $\log_a n = \frac{\log_b n}{\log_b a}$
+    \item Examples: binary search, balanced tree operations
+\end{itemize}
+
+\subsubsection{Linear Time - $O(n)$}
+\begin{itemize}
+    \item Runtime proportional to input size (after dropping constants)
+    \item Example 1: Finding the maximum of an array-must examine each element once
+    \item Example 2: Merging two sorted lists $A = [a_1, \ldots, a_n]$ and $B = [b_1, \ldots, b_m]$ into a sorted whole-$O(n + m)$ operations
+\end{itemize}
+
+\subsubsection{Quadratic Time - $O(n^2)$}
+\begin{itemize}
+    \item Typical when enumerating all pairs of elements
+    \item Example 1: Given $n$ points in the plane, find the closest pair by checking all pairs
+    \begin{itemize}
+        \item Note: A distance matrix is symmetric, so you'd only need half the comparisons-but this factor of 2 is a constant, which we drop
+    \end{itemize}
+    \item Example 2: Examining every element of an $n \times n$ matrix
+\end{itemize}
+
+\subsubsection{Polynomial Time - $O(n^k)$}
+\begin{itemize}
+    \item Example: Given a graph, are there $k$ nodes such that no two are joined by an edge? (Independent set of size $k$)
+    \begin{itemize}
+        \item Approach: Enumerate all $k$-sized subsets and check each
+        \item Checking each subset takes $O(k^2)$ (check all pairs within the subset)
+        \item Number of subsets: $\binom{n}{k} \leq \frac{n^k}{k!}$
+        \item Total: $O\left(k^2 \cdot \frac{n^k}{k!}\right) = O(n^k)$ (since $k$ is constant)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Exponential Time - $O(r^n)$}
+\begin{itemize}
+    \item For every $r > 1$ and $d > 0$: $n^d = O(r^n)$ (exponentials dominate all polynomials)
+    \item Exponentials grow extremely fast; typically impractical for $n > 30$--$50$
+    \item Example: Brute-force enumeration over all subsets ($2^n$ subsets)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{complexity families.png}
+    \caption{Growth rates of common complexity families. Note how polynomial functions ($n$, $n^2$, $n^3$) grow much more slowly than exponential functions ($2^n$) as $n$ increases. The vertical axis uses a logarithmic scale to fit all curves; even so, exponential growth quickly dominates.}
+    \label{fig:complexity-families}
+\end{figure}
+
+
+\section{Stable Matching Problem}
+
+The stable matching problem is a classic algorithmic problem with wide applicability:
+\begin{itemize}
+    \item Matching US medical residents to hospitals (NRMP)
+    \item French students to universities
+    \item Routing internet traffic
+    \item Organ donation matching (e.g., kidney exchanges)
+\end{itemize}
+
+\subsection{Problem Setup}
+
+\begin{rigour}[Stable Matching Problem]
+\textbf{Input:}
+\begin{itemize}
+    \item A set of $n$ students and $n$ hospitals (or more generally, two disjoint sets)
+    \item Each student ranks all hospitals in order of preference
+    \item Each hospital ranks all students in order of preference
+\end{itemize}
+
+\textbf{Output:} A matching (one-to-one assignment) of students to hospitals.
+
+\textbf{Goal:} The matching must be \emph{stable}-there should be no unstable pairs.
+\end{rigour}
+
+\textbf{Unstable pair:} A student $S$ and hospital $H$ form an \textbf{unstable pair} if:
+\begin{itemize}
+    \item $S$ prefers $H$ to their current assigned hospital, AND
+    \item $H$ prefers $S$ to their current assigned student
+\end{itemize}
+Essentially, both would agree to abandon their current assignments to be together-this creates instability.
+
+\textbf{Stable assignment:} A matching with no unstable pairs.
+
+\subsection{Worked Example}
+
+Consider matching three students (Amy, Barry, Charlotte) to three hospitals (Xi'an, York, Z\"{u}rich).
+
+\begin{enumerate}
+    \item \textbf{Students rank hospitals:}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{students_rank.png}
+        \caption{Student preference lists: each row shows one student's ranking of hospitals from most preferred (left) to least preferred (right).}
+        \label{fig:student-preferences}
+    \end{figure}
+
+    \item \textbf{Hospitals rank students:}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\linewidth]{hospital_rank.png}
+        \caption{Hospital preference lists: each row shows one hospital's ranking of students from most preferred (left) to least preferred (right).}
+        \label{fig:hospital-preferences}
+    \end{figure}
+
+    \item \textbf{Finding stability is non-trivial:}
+
+    Is (Charlotte $\to$ Xi'an), (Barry $\to$ York), (Amy $\to$ Z\"{u}rich) stable?
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{instability_1.png}
+        \caption{An \textbf{unstable} matching: Xi'an would prefer Barry over Charlotte, and Barry would prefer Xi'an over York. Both would benefit from switching-this is an unstable pair.}
+        \label{fig:unstable-example}
+    \end{figure}
+
+    Is (Amy $\to$ Xi'an), (Barry $\to$ York), (Charlotte $\to$ Z\"{u}rich) stable?
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.75\linewidth]{image.png}
+        \caption{A \textbf{stable} matching: no student-hospital pair would mutually prefer to switch. For any potential pair, at least one party prefers their current assignment.}
+        \label{fig:stable-example}
+    \end{figure}
+\end{enumerate}
+
+
+\section{Stable Roommate Problem: A Cautionary Example}
+
+Not every matching problem has a stable solution! The \textbf{stable roommate problem} demonstrates this.
+
+\subsection{Problem Setup}
+\begin{itemize}
+    \item $2n$ people, each with a complete ranking over all others
+    \item Goal: Pair everyone into roommate pairs with no unstable pairs
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{stable roomate problem.png}
+    \caption{The stable roommate problem with 4 people: no stable pairing exists. For example, if we pair (A--B) and (C--D), then B and C form an unstable pair. Every possible pairing has at least one unstable pair-see slides for all permutations.}
+    \label{fig:roommate-problem}
+\end{figure}
+
+\begin{redbox}[No Solution Exists!]
+Unlike the stable matching problem (with two distinct groups), the stable roommate problem (matching within a single group) may have \textbf{no stable solution at all}.
+
+This highlights why the bipartite structure of the hospital-student problem matters: the Gale-Shapley algorithm below exploits this structure to guarantee a stable solution always exists.
+\end{redbox}
+
+
+\section{Gale-Shapley Algorithm}
+
+The Gale-Shapley algorithm (also called the \textbf{Deferred Acceptance algorithm}) solves the stable matching problem. The key insight is that we assign \emph{tentative} matches and only know the final stable solution at the end-hence `deferred'.
+
+\begin{keybox}[Gale-Shapley Algorithm]
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \While{some student is free and hasn't applied to every hospital}{
+        Choose such a student $S$\;
+        $H \gets$ first hospital on $S$'s list to whom $S$ hasn't yet applied\;
+        \uIf{$H$ is free}{
+            Tentatively assign $S$ and $H$ as matched\;
+        }
+        \uElseIf{$H$ prefers $S$ to its current student $S'$}{
+            Tentatively assign $S$ and $H$ as matched\;
+            Set $S'$ to be free\;
+        }
+        \Else{
+            $H$ rejects $S$ (and $S$ moves to next hospital on list)\;
+        }
+    }
+    \caption{Gale-Shapley Algorithm}
+\end{algorithm}
+
+\textbf{Key insight:} Students propose (in order of their preferences, from top to bottom), and hospitals respond. This gives the proposing side an advantage in the final stable matching.
+\end{keybox}
+
+\subsection{Correctness Analysis}
+
+We prove correctness in three parts: the algorithm terminates, everyone gets matched, and all matches are stable.
+
+\subsubsection{Does the Algorithm Halt?}
+
+\begin{itemize}
+    \item Students propose to hospitals in \emph{decreasing} order of preference (they never revisit a hospital)
+    \item \textbf{Once a hospital is matched, it never becomes unmatched}-it only `trades up' to a more preferred student
+    \item This monotonicity puts a bound on the algorithm
+\end{itemize}
+
+\textbf{Claim:} The algorithm halts after at most $n^2$ iterations.
+
+\textbf{Reasoning:}
+\begin{itemize}
+    \item Outer bound: $n$ students
+    \item Inner bound: each student applies to at most $n$ hospitals
+    \item Worst case: each student applies to every hospital before all are matched
+\end{itemize}
+
+\begin{keybox}[Gale-Shapley Complexity]
+The Gale-Shapley algorithm runs in $O(n^2)$ iterations (and $O(n^2)$ time with proper implementation-see Section~\ref{sec:efficient-implementation}).
+\end{keybox}
+
+\subsubsection{Does Everyone Get Matched?}
+
+\textbf{Claim:} All students and hospitals get matched.
+
+\textbf{Proof (by contradiction):}
+\begin{enumerate}
+    \item Suppose, for contradiction, that some student $S$ is never matched when the algorithm terminates
+    \item Then some hospital $H$ must also be unmatched (since there are equal numbers)
+    \item But if $H$ is unmatched and free, it was never applied to
+    \item But $S$ applied to \emph{every} hospital (since $S$ remained unmatched and kept proposing)
+    \item Contradiction! Therefore, everyone gets matched.
+\end{enumerate}
+
+\subsubsection{Are All Matches Stable?}
+
+\textbf{Claim:} The final matching contains no unstable pairs.
+
+\textbf{Proof (by contradiction):}
+
+Suppose $(S, H)$ is an unstable pair in the final matching-meaning $S$ is matched to $H^*$ (not $H$), $H$ is matched to $S^*$ (not $S$), yet both $S$ and $H$ would prefer each other.
+
+Two cases:
+
+\textbf{Case 1: $S$ never applied to $H$}
+\begin{itemize}
+    \item Students apply in order of preference, from top to bottom
+    \item If $S$ never applied to $H$, then $S$ was matched before reaching $H$ on their list
+    \item Therefore, $S$ prefers their current match $H^*$ to $H$
+    \item Contradiction: $(S, H)$ is not unstable
+\end{itemize}
+
+\textbf{Case 2: $S$ applied to $H$}
+\begin{itemize}
+    \item $H$ rejected $S$ (either immediately or later when trading up)
+    \item $H$ only rejects in favour of a more preferred student
+    \item Therefore, $H$ prefers their final match $S^*$ to $S$
+    \item Contradiction: $(S, H)$ is not unstable
+\end{itemize}
+
+In both cases, we reach a contradiction. Therefore, no unstable pairs exist.
+
+\begin{tcolorbox}
+\textbf{The Logic:}
+\begin{itemize}
+    \item \textbf{Students go down in quality:} They systematically try their top choices first, settling for less preferred options only when rejected.
+    \item \textbf{Hospitals only increase in quality:} They can only trade up to more preferred students, never down.
+    \item \textbf{Proposer advantage:} The proposing side (students) ends up with their best possible stable partner, while the receiving side (hospitals) ends up with their worst stable partner (among all stable matchings).
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Efficient Implementation}
+\label{sec:efficient-implementation}
+
+We've established that Gale-Shapley runs in $O(n^2)$ iterations. But how long does each iteration take?
+
+\textbf{The goal:} Each iteration should take $O(1)$ time, regardless of $n$.
+
+This is where our earlier discussion of arrays vs queues becomes crucial:
+\begin{itemize}
+    \item We need $O(1)$ access to find the next hospital a student should apply to
+    \item We need $O(1)$ access to compare which of two students a hospital prefers
+    \item We need $O(1)$ operations to manage the pool of unmatched students
+\end{itemize}
+
+\subsubsection{The Challenge: Comparing Preferences}
+
+When a hospital $H$ must decide between its current student $S'$ and a new applicant $S$, it needs to quickly determine which it prefers.
+
+If we store preferences as a simple list (e.g., $H$'s preferences = [Amy, Barry, Charlotte]), then determining whether $H$ prefers $S$ to $S'$ requires searching through the list-$O(n)$ per comparison!
+
+\subsubsection{The Solution: Inverse Preference Tables}
+
+Create an \textbf{inverse preference table} for each hospital: instead of listing students in preference order, store each student's \emph{rank} directly.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{inverse preference.png}
+    \caption{Inverse preference table: for each hospital, we store each student's rank directly. Now comparing preferences is $O(1)$: just compare $\text{inverse}[S]$ vs $\text{inverse}[S']$.}
+    \label{fig:inverse-preference}
+\end{figure}
+
+\textit{Note: This is still the hospital's preference information-we're just reorganising it for efficient lookup. It tells us nothing about students' preferences.}
+
+\textbf{Example:}
+\begin{itemize}
+    \item $\text{inverse}[\text{Amy}]$ at Xi'an = 1 (Amy is Xi'an's first preference)
+    \item $\text{inverse}[\text{Barry}]$ at Xi'an = 2
+    \item To check if York prefers Amy or Barry: compare $\text{inverse}[\text{Amy}] = 2$ vs $\text{inverse}[\text{Barry}] = 1$
+    \item Since $1 < 2$, York prefers Barry
+\end{itemize}
+
+\textbf{This makes comparison $O(1)$}: direct array indexing instead of list searching.
+
+\subsubsection{Complete Data Structure Design}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{putting_together.png}
+    \caption{Complete efficient implementation: combining queues for managing unmatched students with arrays for preference lookups. The key line ``if $H$ prefers $S$ to current student $S'$'' becomes a single $O(1)$ array comparison using the inverse preference table.}
+    \label{fig:complete-implementation}
+\end{figure}
+
+\textbf{Analysing each operation:}
+\begin{itemize}
+    \item \textbf{Get next unmatched student:} Dequeue from head-$O(1)$
+    \item \textbf{Get student's next hospital to try:} Array index into student's preference list-$O(1)$
+    \item \textbf{Check if hospital is free:} Array lookup-$O(1)$
+    \item \textbf{Compare student preferences for hospital:} Inverse table lookup-$O(1)$
+    \item \textbf{Update matching arrays:} Array assignment-$O(1)$
+    \item \textbf{Return rejected student to pool:} Enqueue at tail-$O(1)$
+\end{itemize}
+
+Every operation is $O(1)$, so each iteration is $O(1)$.
+
+\begin{redbox}[Why the Queue Matters]
+What if we used a boolean array instead of a queue to track unmatched students?
+
+\texttt{is\_matched[S] = True} if student $S$ is matched.
+
+Each iteration would require scanning the entire array to find an unmatched student-$O(n)$ per iteration. With $n^2$ iterations, total time becomes $O(n^3)$ instead of $O(n^2)$.
+
+The queue ensures we always have $O(1)$ access to an unmatched student.
+\end{redbox}
+
+\subsection{Final Analysis}
+
+\begin{keybox}[Gale-Shapley Algorithm Summary]
+With correct implementation using arrays (for $O(1)$ random access) and queues (for $O(1)$ head/tail operations):
+\begin{itemize}
+    \item At most $n^2$ iterations
+    \item Each iteration takes constant time $K$ (some fixed number of $O(1)$ operations)
+    \item Total: at most $K \times n^2$ operations
+\end{itemize}
+
+\textbf{Time complexity: $O(n^2)$}
+
+We don't care about the constant $K$-it depends on implementation details (hardware, language, etc.). We care about $n$, which varies with the problem size.
+
+This is why we drop constants in Big O notation.
+\end{keybox}
+
+\begin{tcolorbox}
+\textbf{Summary of Gale-Shapley Analysis:}
+\begin{enumerate}
+    \item \textbf{Correctness:} Proven via three claims-termination, complete matching, stability
+    \item \textbf{Efficiency:} $O(n^2)$ time with proper data structures
+    \item \textbf{Key insight:} Choosing the right data structure for each operation (arrays for random access, queues for sequential processing, inverse tables for preference comparison) ensures each iteration is $O(1)$
+\end{enumerate}
+\end{tcolorbox}
+

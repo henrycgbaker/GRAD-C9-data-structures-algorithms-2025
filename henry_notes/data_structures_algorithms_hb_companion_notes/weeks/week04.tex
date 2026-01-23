@@ -1,0 +1,957 @@
+% Week 4: Programming Paradigms
+% Covers: Low-level to high-level abstractions, programming paradigms (imperative,
+% declarative, functional, OOP), pure functions, recursion, lambda functions,
+% higher-order functions, literate programming, TDD, coupling, cohesion, information hiding
+
+\chapter{Programming Paradigms}
+\label{ch:programming-paradigms}
+
+Programming paradigms are fundamental ways of thinking about and structuring code. Just as natural languages shape how we express ideas, programming paradigms shape how we express algorithms. Understanding paradigms matters for data structures and algorithms because different paradigms naturally suit different problems: functional programming excels at recursive data structures, object-oriented programming shines for modelling complex systems, and declarative approaches simplify data manipulation tasks.
+
+This week explores the journey from low-level machine operations to high-level abstractions, then surveys the four major programming paradigms. We conclude with software engineering principles-coupling, cohesion, and information hiding-that guide how we structure code regardless of paradigm.
+
+\section{Low-Level to High-Level Abstractions}
+\label{sec:abstractions}
+
+Programming languages exist on a spectrum from machine-level instructions to human-readable abstractions. Understanding this hierarchy illuminates why different languages feel so different to use, and why some operations are fast while others are slow.
+
+\subsection{Assembly: Unitary Operations}
+\label{subsec:assembler}
+
+At the lowest level, programs consist of individual instructions that directly control the processor. Assembly language provides a thin veneer over raw machine code, using human-readable mnemonics for operations.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{assembler.png}
+    \caption{Assembly language example. Each line represents a single machine instruction: moving data between registers, performing arithmetic, or controlling program flow. The cryptic mnemonics (\texttt{MOV}, \texttt{ADD}, \texttt{JMP}) map directly to processor operations.}
+    \label{fig:assembler}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Moving data around memory}: The fundamental operations involve loading values into registers, storing them back to memory, and transferring between locations.
+    \item \textbf{Machine-specific instructions}: Assembly code written for an Intel x86 processor will not run on an ARM processor-the instruction sets differ fundamentally.
+    \item \textbf{Low-level concepts}: The programmer must manage registers, memory addresses, and processor flags directly.
+\end{itemize}
+
+\begin{keybox}[Why Assembly Still Matters]
+Though rarely written by hand today, assembly language remains relevant for:
+\begin{itemize}
+    \item Understanding what high-level code compiles to (performance analysis)
+    \item Writing device drivers and operating system kernels
+    \item Embedded systems with extreme resource constraints
+    \item Security research and reverse engineering
+\end{itemize}
+\end{keybox}
+
+
+\subsection{Primitives: High-Level Instructions}
+\label{subsec:primitives}
+
+\textbf{Primitives} are the basic building blocks provided by a programming language-data types, control structures, and fundamental operations. They abstract away the underlying machine operations.
+
+\begin{itemize}
+    \item \textbf{Common tasks abstracted}: Rather than writing dozens of assembly instructions to add two numbers, you write \texttt{x + y}.
+    \item \textbf{Each expression is a series of operations}: A simple statement like \texttt{total = price * quantity} may translate to many machine instructions.
+    \item \textbf{Parsing trees for grammar}: Languages define formal grammars; the compiler or interpreter parses code into abstract syntax trees before execution.
+\end{itemize}
+
+\begin{rigour}[High-Level Primitives]
+High-level primitives are \textbf{machine-independent}-they work identically regardless of the underlying processor architecture. This abstraction enables:
+\begin{itemize}
+    \item \textbf{Portability}: The same source code runs on different machines
+    \item \textbf{Productivity}: Programmers think in terms of the problem, not the hardware
+    \item \textbf{Safety}: The language can prevent common errors (buffer overflows, type mismatches)
+\end{itemize}
+The cost is a layer of translation between your code and the machine.
+\end{rigour}
+
+
+\subsection{Compilers: Translation to Machine Code}
+\label{subsec:compiler}
+
+A \textbf{compiler} translates high-level source code into machine code \emph{before} execution. The resulting binary file runs directly on the processor.
+
+\begin{itemize}
+    \item \textbf{Translates primitives to machine code}: Takes machine-independent high-level code and converts it into machine-dependent operations.
+    \item \textbf{Produces self-contained binaries}: The entire program is compiled once, producing an executable that runs without the original source code.
+    \item \textbf{Target-specific backends}: To compile for different architectures (x86, ARM, etc.), the compiler needs separate code generation modules for each target.
+    \item \textbf{Optimisation opportunities}: Because the compiler sees the entire program at once, it can perform extensive optimisations-inlining functions, reordering instructions, eliminating dead code.
+\end{itemize}
+
+\begin{keybox}[Compiled Languages]
+Examples: C, C++, Rust, Go, Fortran, Haskell (via GHC).
+
+\textbf{Advantages}: Fast execution, optimised machine code, no runtime dependency on source.
+
+\textbf{Disadvantages}: Slower development cycle (compile-run-debug), platform-specific binaries, less flexible at runtime.
+\end{keybox}
+
+
+\subsection{Interpreters: Direct Execution}
+\label{subsec:interpreter}
+
+An \textbf{interpreter} executes source code directly, reading and performing instructions on the fly without a separate compilation step.
+
+\begin{itemize}
+    \item \textbf{Direct execution}: Reads high-level code and performs operations immediately, without producing a separate binary.
+    \item \textbf{Line-by-line processing}: The interpreter handles each statement as it encounters it, enabling interactive execution.
+    \item \textbf{Just-In-Time (JIT) compilation}: Modern interpreters often use a hybrid approach-compiling frequently-executed code paths to machine code during execution for better performance.
+\end{itemize}
+
+\textbf{Performance considerations:}
+\begin{itemize}
+    \item Compilers can perform more optimisation because they analyse the entire program in advance.
+    \item Compilers know the data types at compile time, avoiding runtime type checks. For example, knowing a variable is a floating-point number eliminates checks for what kind of data type it is.
+    \item Interpreters trade execution speed for flexibility and development speed.
+\end{itemize}
+
+\textbf{Advantages of interpretation:}
+\begin{itemize}
+    \item \textbf{Interactive development}: Execute code snippets immediately (REPL environments)
+    \item \textbf{Flexibility}: Modify and test code without recompilation
+    \item \textbf{Platform independence}: The same source runs anywhere the interpreter exists
+\end{itemize}
+
+\begin{keybox}[Interpreted Languages]
+Examples: Python, JavaScript, Ruby, R, MATLAB.
+
+Many ``interpreted'' languages actually use bytecode compilation: Python compiles to \texttt{.pyc} bytecode, which the Python Virtual Machine then interprets. This is a middle ground between pure interpretation and full compilation.
+\end{keybox}
+
+
+\section{Four Programming Paradigms}
+\label{sec:paradigms}
+
+A \textbf{programming paradigm} is a fundamental style of programming that provides a conceptual framework for structuring code. Most modern languages support multiple paradigms, but each has historical roots in a particular way of thinking.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{paradigms.png}
+    \caption{The four major programming paradigms. Imperative programming specifies step-by-step instructions. Declarative programming describes the desired result. Functional programming builds programs from composable functions. Object-oriented programming models systems as interacting objects.}
+    \label{fig:paradigms}
+\end{figure}
+
+\begin{keybox}[Paradigm Summary]
+\begin{tabular}{@{}ll@{}}
+    \textbf{Imperative} & ``Follow these steps'' - explicit control flow \\
+    \textbf{Declarative} & ``Here is the problem'' - describe what, not how \\
+    \textbf{Functional} & ``Compose these functions'' - transform data through functions \\
+    \textbf{Object-Oriented} & ``Model these objects'' - encapsulate state and behaviour
+\end{tabular}
+\end{keybox}
+
+
+\subsection{Imperative Programming}
+\label{subsec:imperative}
+
+\textit{``Tell the machine the steps to take.''}
+
+Imperative programming is the oldest and most direct paradigm. You write explicit instructions that modify program state, step by step, in the order they should execute.
+
+\begin{itemize}
+    \item \textbf{Explicit control flow}: The programmer specifies exactly what happens at each step.
+    \item \textbf{Requires precise knowledge}: You must know the exact sequence of operations to solve the problem.
+    \item \textbf{Historical examples}: FORTRAN (1957, still used for numerical computing), COBOL (1959, still running banking systems), C (1972, systems programming).
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{fortran.png}
+    \caption{Fortran 77 code example. Originally written on punch cards, Fortran pioneered structured imperative programming. The numbered lines and explicit \texttt{GOTO} statements reflect the step-by-step nature of early imperative code. Remarkably, much high-performance numerical computing still relies on Fortran libraries today.}
+    \label{fig:fortran}
+\end{figure}
+
+\begin{rigour}[Characteristics of Imperative Programming]
+Imperative programs are characterised by:
+\begin{enumerate}
+    \item \textbf{Sequential execution}: Statements execute in order (unless control flow directs otherwise)
+    \item \textbf{Mutable state}: Variables can be reassigned; the program's state changes over time
+    \item \textbf{Explicit control structures}: Loops (\texttt{for}, \texttt{while}), conditionals (\texttt{if/else}), jumps (\texttt{break}, \texttt{continue})
+    \item \textbf{Assignment statements}: The fundamental operation is assigning values to variables
+\end{enumerate}
+\end{rigour}
+
+
+\subsection{Declarative Programming}
+\label{subsec:declarative}
+
+\textit{``Tell the machine what problem to solve.''}
+
+Declarative programming inverts the imperative approach: rather than specifying \emph{how} to compute something, you describe \emph{what} you want. The system figures out the implementation details.
+
+\begin{center}
+\textbf{Imperative:} ``Follow these steps'' \quad vs \quad \textbf{Declarative:} ``Here is the problem''
+\end{center}
+
+\begin{itemize}
+    \item \textbf{Problem specification}: You must precisely define the problem, not the solution procedure.
+    \item \textbf{Central to data science}: Much of what data scientists do is declarative-specify transformations, let the system optimise execution.
+    \item \textbf{Agent-based modelling} exemplifies declarative thinking:
+    \begin{itemize}
+        \item Define exactly how one agent interacts with other agents
+        \item Set up the environment they interact in
+        \item Watch emergent behaviour unfold
+    \end{itemize}
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black, title=\textbf{Example: SQL (Declarative)}]
+In SQL, you write \emph{what data you want}, not \emph{how to obtain it}. The database query optimiser determines the best execution plan.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{SQL.png}
+    \caption{SQL query example. The query specifies desired columns, tables, join conditions, and filters-but says nothing about which indexes to use, how to order the joins, or how to scan the tables. The database engine makes these decisions.}
+    \label{fig:sql}
+\end{figure}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5!white, colframe=blue!75!black, title=\textbf{Example: dplyr (Declarative Data Manipulation)}]
+The R package \texttt{dplyr} provides a declarative grammar for data manipulation, letting you chain transformations without specifying implementation.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{DPLYR.png}
+    \caption{dplyr example. The pipe operator (\texttt{\%>\%}) chains declarative verbs: \texttt{filter}, \texttt{select}, \texttt{mutate}, \texttt{summarise}. You describe the transformation; dplyr handles execution.}
+    \label{fig:dplyr}
+\end{figure}
+\end{tcolorbox}
+
+
+\subsection{Functional Programming}
+\label{subsec:functional}
+
+\textit{``Define entities which accept input and provide output.''}
+
+Functional programming builds programs by composing small, independent functions. Each function takes inputs and produces outputs without modifying external state.
+
+\begin{itemize}
+    \item \textbf{Composition}: Construct complex programs by combining simpler functions.
+    \item \textbf{Mathematical foundation}: Functions in functional programming behave like mathematical functions-same input always yields same output.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{functional.png}
+    \caption{Functional approach to computing a balance. The expression \texttt{(Find\_diff (Find\_sum Old\_balance Credits) (Find\_sum Debits))} composes three functions. Data flows through the composition: credits and debits are summed separately, then differenced with the old balance.}
+    \label{fig:functional}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{imperative.png}
+    \caption{Imperative approach to the same calculation. Variables are initialised, then mutated through loops. The state changes at each step, and the final result depends on the sequence of mutations.}
+    \label{fig:imperative}
+\end{figure}
+
+
+\subsubsection{Pure Functions}
+\label{subsubsec:pure-functions}
+
+A \textbf{pure function} has two defining properties: it produces the same output for the same input, and it has no side effects.
+
+\begin{rigour}[Definition: Pure Function]
+A function $f$ is \textbf{pure} if:
+\begin{enumerate}
+    \item \textbf{Deterministic}: For any input $x$, $f(x)$ always returns the same value
+    \item \textbf{No side effects}: Calling $f(x)$ does not modify any state outside the function (no changing global variables, no database writes, no console output)
+\end{enumerate}
+A function that reads from or writes to external state is \textbf{impure}.
+\end{rigour}
+
+Pure functions offer profound advantages:
+
+\begin{itemize}
+    \item \textbf{Formal provability}: Pure functions can be mathematically reasoned about. Since they always produce the same output for the same input, you can prove properties about them-essential for mission-critical systems.
+
+    \item \textbf{Modularity}: Each function does one thing. When testing or debugging, you need only consider the inputs and outputs, not hidden context or global state. Impure functions force you to reason about whether the surrounding context is correct.
+
+    \item \textbf{Composability}: Pure functions combine freely. Because they have no side effects, you can compose them without worrying about execution order or interference. This enables powerful code reuse and leads to more readable, maintainable programs.
+\end{itemize}
+
+\begin{keybox}[Pure Functions in Practice]
+Many functions you write daily are pure:
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def square(x):
+    return x * x  # Pure: same input, same output, no side effects
+
+def add(a, b):
+    return a + b  # Pure
+\end{lstlisting}
+
+These are impure:
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+total = 0
+def add_to_total(x):
+    global total
+    total += x    # Impure: modifies global state
+    return total
+
+def get_random():
+    return random.random()  # Impure: different output each call
+\end{lstlisting}
+\end{keybox}
+
+
+\subsubsection{Loops vs Recursion}
+\label{subsubsec:loops-recursion}
+
+Functional programming prefers \textbf{recursion} over \textbf{loops} because loops inherently involve mutable state.
+
+\textbf{Loops are not purely functional:}
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Iterative Fibonacci - NOT functional
+a = 0
+b = 1
+for term in range(50):
+    print(f'term: {term} / number: {a}')
+    (a, b) = (b, a + b)
+\end{lstlisting}
+
+\begin{itemize}
+    \item The variables \texttt{a} and \texttt{b} are \emph{reassigned} (mutated) in each iteration.
+    \item The loop must track which iteration we are on-state disconnected from the calculation itself.
+    \item The calculation depends not just on the input but on the current iteration state.
+    \item In purely functional code, you would never look outside the function itself.
+\end{itemize}
+
+\textbf{Recursion is functional:}
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Recursive Fibonacci - functional
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n - 1) + fib(n - 2)
+\end{lstlisting}
+
+\begin{itemize}
+    \item No side effects or state mutations-the function simply calls itself with different arguments.
+    \item Each recursive call works with its own parameters; no shared mutable state.
+    \item The code mirrors the mathematical definition: $F(n) = F(n-1) + F(n-2)$.
+    \item Multiple function instances may execute (conceptually) simultaneously.
+\end{itemize}
+
+\begin{redbox}[Recursion Performance]
+The naive recursive Fibonacci has exponential time complexity $O(2^n)$ because it recomputes the same values many times. Practical functional programming uses techniques like \textbf{memoisation} (caching results) or \textbf{tail recursion} (which compilers can optimise to loops) to achieve efficiency. The conceptual purity of recursion does not require sacrificing performance.
+\end{redbox}
+
+
+\subsubsection{Anonymous and Higher-Order Functions}
+\label{subsubsec:anonymous-functions}
+
+\textbf{Anonymous functions} (often called \textbf{lambda functions}) are functions defined without a name. They provide a concise way to create simple functions for single use, typically as arguments to other functions.
+
+\begin{rigour}[Definition: Higher-Order Function]
+A \textbf{higher-order function} is a function that either:
+\begin{enumerate}
+    \item Takes one or more functions as arguments, and/or
+    \item Returns a function as its result
+\end{enumerate}
+Higher-order functions are central to functional programming, enabling powerful abstractions like \texttt{map}, \texttt{filter}, and \texttt{reduce}.
+\end{rigour}
+
+\textbf{Example:} A higher-order function that applies a function then multiplies by 3:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def times3(a, b, function):
+    return 3 * function(a, b)
+\end{lstlisting}
+
+Here, \texttt{times3} takes two numbers (\texttt{a} and \texttt{b}) and a function as arguments. It applies the provided function to \texttt{a} and \texttt{b}, then multiplies the result by 3.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Using a lambda to add, then multiply by 3
+add_then_times3 = times3(2, 4, lambda x, y: x + y)  # (2 + 4) * 3 = 18
+
+# Using a lambda to subtract, then multiply by 3
+sub_then_times3 = times3(2, 4, lambda x, y: x - y)  # (2 - 4) * 3 = -6
+\end{lstlisting}
+
+The anonymous functions \texttt{lambda x, y: x + y} and \texttt{lambda x, y: x - y} are defined inline without names. This avoids cluttering the namespace with one-off function definitions.
+
+\begin{keybox}[Power of Higher-Order Functions]
+Higher-order functions enable:
+\begin{itemize}
+    \item \textbf{Customisation without boilerplate}: Pass different behaviours without defining separate named functions
+    \item \textbf{Code reuse}: Write general algorithms parameterised by specific operations
+    \item \textbf{Declarative style}: Express \emph{what} transformation to apply, not \emph{how} to loop through data
+\end{itemize}
+Common higher-order functions: \texttt{map(f, xs)}, \texttt{filter(pred, xs)}, \texttt{reduce(f, xs)}.
+\end{keybox}
+
+
+\subsection{Object-Oriented Programming}
+\label{subsec:oop}
+
+Object-oriented programming (OOP) models programs as collections of \textbf{objects}-self-contained units that combine data (attributes) and behaviour (methods).
+
+\begin{itemize}
+    \item \textbf{Modularisation}: Objects encapsulate related functionality, enabling changes without ripple effects.
+    \item \textbf{Self-knowledge}: Objects maintain information about their own state.
+    \item \textbf{Communication}: Objects interact by sending messages (method calls) to each other.
+    \item \textbf{Actions}: Each object has a defined set of behaviours it can perform.
+    \item \textbf{Mutability}: Objects can modify their own internal state.
+\end{itemize}
+
+
+\subsubsection{Classes vs Objects}
+\label{subsubsec:classes-objects}
+
+\begin{rigour}[Definition: Class and Object]
+A \textbf{class} is a blueprint or template that defines:
+\begin{itemize}
+    \item What data (attributes) instances will hold
+    \item What behaviours (methods) instances can perform
+    \item Initial values and default behaviours
+\end{itemize}
+
+An \textbf{object} (or \textbf{instance}) is a concrete realisation of a class:
+\begin{itemize}
+    \item Created by \emph{instantiating} the class
+    \item Has its own copy of the instance attributes
+    \item Shares method definitions with other instances of the same class
+\end{itemize}
+\end{rigour}
+
+\textbf{Analogy}: A class is like an architectural plan for a house. It specifies the layout, materials, and features. An object is an actual house built from that plan-each house has the same structure but may have different paint colours, furniture, and occupants.
+
+\begin{itemize}
+    \item \textbf{Class = blueprint}: Defines all possible configurations of the thing. When a class is defined, no memory is allocated.
+    \item \textbf{Object = instantiated class}: A specific version with concrete data. Memory is allocated when the object is created.
+\end{itemize}
+
+
+\subsubsection{Classes and Methods in Python}
+\label{subsubsec:python-classes}
+
+\textbf{Constructor}
+
+The constructor method \texttt{\_\_init\_\_} is called automatically when an object is created. It initialises the object's attributes.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Example:
+    def __init__(self, attribute):
+        self.attribute = attribute
+\end{lstlisting}
+
+\textbf{Attributes}
+
+Attributes are variables belonging to an object. They hold data that can vary between instances and change over time.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Example:
+    def __init__(self):
+        self.attribute = 'value'
+\end{lstlisting}
+
+\textbf{Methods}
+
+Methods are functions defined inside a class. They define what the object can do-either to itself or to other objects.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Example:
+    def method(self):
+        return 'I am a method'
+\end{lstlisting}
+
+\textbf{Static Methods}
+
+Static methods do not require access to instance or class data. They are marked with the \texttt{@staticmethod} decorator and behave like regular functions that happen to live inside a class.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Example:
+    @staticmethod
+    def static_method():
+        return 'I am a static method'
+\end{lstlisting}
+
+\textbf{Properties (Getters/Setters)}
+
+Properties provide controlled access to attributes, allowing validation or computation when getting or setting values.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Example:
+    def __init__(self, value):
+        self._attribute = value
+
+    @property
+    def attribute(self):
+        return self._attribute
+
+    @attribute.setter
+    def attribute(self, value):
+        self._attribute = value
+\end{lstlisting}
+
+
+\subsubsection{Core Properties of OOP}
+\label{subsubsec:oop-properties}
+
+\textbf{Inheritance}
+
+\begin{rigour}[Definition: Inheritance]
+\textbf{Inheritance} allows a new class (the \emph{child} or \emph{subclass}) to extend or modify an existing class (the \emph{parent} or \emph{superclass}). The child class inherits all attributes and methods of the parent, and can:
+\begin{itemize}
+    \item Add new attributes or methods
+    \item Override inherited methods with new implementations
+    \item Extend inherited methods by calling the parent's version
+\end{itemize}
+\end{rigour}
+
+\textit{Example}: A \texttt{Regression} class might define data processing common to all regression analyses. A \texttt{RidgeRegression} class can extend \texttt{Regression} to add regularisation-specific behaviour, reusing the common code.
+
+\textbf{Polymorphism}
+
+\begin{rigour}[Definition: Polymorphism]
+\textbf{Polymorphism} (``many forms'') allows objects of different classes to respond to the same method call in different ways. Each object interprets the message according to its own class definition.
+\end{rigour}
+
+This enables designing interfaces that work with multiple types. You can write code that calls \texttt{.fit()} and \texttt{.predict()} on any model object, regardless of whether it is a linear regression, random forest, or neural network-each implements these methods according to its own algorithm.
+
+\textit{Example}: In scikit-learn, every model class implements \texttt{.fit()} and \texttt{.predict()}. The internal implementations vary dramatically, but the interface is uniform.
+
+\textbf{Encapsulation}
+
+\begin{rigour}[Definition: Encapsulation]
+\textbf{Encapsulation} restricts access to an object's internal state, distinguishing between:
+\begin{itemize}
+    \item \textbf{Public interface}: Methods and attributes intended for external use. The developer promises to maintain this interface.
+    \item \textbf{Private internals}: Implementation details hidden from external code. These may change without notice.
+\end{itemize}
+\end{rigour}
+
+Encapsulation means you interact with objects only through their promised capabilities, not their internal mechanisms. You do not need to understand how \texttt{.fit()} works internally-only what it does.
+
+\begin{itemize}
+    \item \textbf{Public}: Stable interface the developer commits to maintaining.
+    \item \textbf{Private}: Implementation details that may change; not to be relied upon.
+\end{itemize}
+
+In Python, private attributes and methods are conventionally denoted with a leading underscore (\texttt{\_attribute}) or double underscore (\texttt{\_\_attribute}). This is a convention, not enforced by the language.
+
+
+\section{Software Development Practices}
+\label{sec:software-practices}
+
+Beyond paradigms, effective software development requires principles for organising code. This section covers literate programming, test-driven development, and the interrelated concepts of coupling, cohesion, and information hiding.
+
+\subsection{Literate Programming}
+\label{subsec:literate-programming}
+
+\textbf{Literate programming}, introduced by Donald Knuth in the 1980s, represents a philosophical shift: code is primarily for humans to read, not machines to execute.
+
+\begin{itemize}
+    \item \textbf{Self-documenting code}: Rather than adding comments to obscure code, write code that is inherently clear.
+    \item \textbf{Structure and intelligibility}: Focus on making the logic obvious from the code itself.
+    \item \textbf{Building tools for humans}: We are not just instructing computers-we are building software systems that others must understand, maintain, and extend.
+    \item \textbf{Readability over cleverness}: Simple, obvious code is better than clever, obscure code.
+\end{itemize}
+
+\begin{keybox}[Literate Programming Principles]
+\begin{itemize}
+    \item Choose clear, descriptive names for variables and functions
+    \item Keep functions short and focused on one task
+    \item Structure code to match the logical structure of the problem
+    \item Comments should explain \emph{why}, not \emph{what}-the code shows what
+\end{itemize}
+\end{keybox}
+
+
+\subsection{Test-Driven Development (TDD)}
+\label{subsec:tdd}
+
+\textbf{Test-Driven Development} inverts the traditional development cycle: write tests \emph{before} writing code.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{tdd.png}
+    \caption{The TDD cycle: Red-Green-Refactor. First write a failing test (Red), then write minimal code to pass the test (Green), then improve the code while keeping tests passing (Refactor). This cycle repeats for each new piece of functionality.}
+    \label{fig:tdd}
+\end{figure}
+
+Each test should be short and clear, following the \textbf{Given-When-Then} pattern:
+
+\begin{itemize}
+    \item \textbf{GIVEN}: What are the initial conditions? (Setup)
+    \item \textbf{WHEN}: What action is being performed? (Execution)
+    \item \textbf{THEN}: What is the expected behaviour? (Assertion)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{testing.png}
+    \caption{The testing pyramid. \textbf{Unit tests} (base): Test individual functions or methods in isolation-fast, numerous, and focused. \textbf{Integration tests} (middle): Test that multiple units work together correctly-do outputs of one module align with inputs of another? \textbf{End-to-end (E2E) tests} (top): Test the complete application as a user would experience it-slow but comprehensive.}
+    \label{fig:testing-pyramid}
+\end{figure}
+
+\begin{keybox}[Why TDD?]
+\begin{itemize}
+    \item \textbf{Design pressure}: Writing tests first forces you to think about interfaces and use cases
+    \item \textbf{Confidence}: Tests catch regressions when you modify code
+    \item \textbf{Documentation}: Tests demonstrate how code is intended to be used
+    \item \textbf{Incremental progress}: Each passing test is a small, verified step forward
+\end{itemize}
+\end{keybox}
+
+
+\subsection{Coupling}
+\label{subsec:coupling}
+
+\textbf{Coupling} measures how strongly different parts of a system depend on each other. High coupling means changes in one module often require changes in others-making the system fragile and hard to maintain.
+
+\begin{keybox}[The Coupling Principle]
+\textbf{Minimise coupling between modules.}
+
+Low coupling means modules can be:
+\begin{itemize}
+    \item Understood independently
+    \item Modified without cascading changes
+    \item Tested in isolation
+    \item Reused in different contexts
+\end{itemize}
+High coupling is where bugs hide-interdependencies create unexpected interactions.
+\end{keybox}
+
+Coupling exists on a spectrum from loose (good) to tight (problematic). The following types are ordered from loosest to tightest:
+
+\subsubsection{Data Coupling (Loosest)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Data coupling.png}
+    \caption{Data coupling: modules share only the data necessary for the task. Module A passes specific values to Module B, which processes them and returns a result. Neither module needs to know about the other's internal structure.}
+    \label{fig:data-coupling}
+\end{figure}
+
+\textbf{Data coupling} occurs when modules communicate by passing only the data needed for the task-nothing more. This is the loosest, most desirable form of coupling.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def calculate_tax(income, rate):
+    """Data coupling: receives only the values needed."""
+    return income * rate
+
+# Calling module passes only required data
+tax = calculate_tax(50000, 0.2)
+\end{lstlisting}
+
+\subsubsection{Stamp Coupling}
+
+\textbf{Stamp coupling} occurs when modules share a composite data structure (e.g., an object or dictionary), but each module uses only part of it.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def process_order(order):
+    """Stamp coupling: receives entire order, uses only some fields."""
+    return order['quantity'] * order['price']
+
+# The function receives more data than it needs
+order = {'customer': 'Alice', 'quantity': 5, 'price': 10.0, 'date': '2024-01-01'}
+total = process_order(order)
+\end{lstlisting}
+
+The problem: if the \texttt{order} structure changes, all functions receiving it may need review, even if they do not use the changed fields.
+
+\subsubsection{Control Coupling}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Control coupline.png}
+    \caption{Control coupling: Module A passes a control flag that determines how Module B behaves. Module B must interpret the flag and branch accordingly, creating tighter interdependency than pure data coupling.}
+    \label{fig:control-coupling}
+\end{figure}
+
+\textbf{Control coupling} occurs when one module controls another's behaviour by passing control information (flags, commands, mode parameters).
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def format_output(data, output_type):
+    """Control coupling: behaviour depends on control flag."""
+    if output_type == 'json':
+        return json.dumps(data)
+    elif output_type == 'xml':
+        return to_xml(data)
+    elif output_type == 'csv':
+        return to_csv(data)
+\end{lstlisting}
+
+The receiving module must understand and act on the control information, creating tighter coupling. The caller must know what flags are valid.
+
+\subsubsection{Common Coupling}
+
+\textbf{Common coupling} occurs when multiple modules share access to the same global data. Changes to the global state can affect any module that uses it, making behaviour unpredictable.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Global variable - source of common coupling
+config = {'debug': True, 'max_retries': 3}
+
+def module_a():
+    if config['debug']:  # Reads global
+        print("Debug mode")
+
+def module_b():
+    config['max_retries'] = 5  # Modifies global - affects module_a!
+\end{lstlisting}
+
+\begin{redbox}[Dangers of Global State]
+Common coupling through global variables is particularly dangerous because:
+\begin{itemize}
+    \item Any module can modify the shared state
+    \item Effects are non-local and hard to trace
+    \item Testing requires careful setup and teardown of global state
+    \item Concurrent access can cause race conditions
+\end{itemize}
+\end{redbox}
+
+\subsubsection{Content Coupling (Tightest)}
+
+\textbf{Content coupling} occurs when one module directly accesses or modifies another module's internal data or code. This is the tightest, most problematic form of coupling.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class ModuleA:
+    def __init__(self):
+        self._internal_state = 100  # Intended to be private
+
+class ModuleB:
+    def manipulate(self, module_a):
+        # Content coupling: directly accessing internal state
+        module_a._internal_state = 200  # Violates encapsulation!
+\end{lstlisting}
+
+Content coupling violates encapsulation entirely. If \texttt{ModuleA}'s internal structure changes, \texttt{ModuleB} breaks.
+
+
+\subsection{Cohesion}
+\label{subsec:cohesion}
+
+\textbf{Cohesion} measures how strongly related the elements within a single module are. High cohesion means everything in a module serves a unified purpose-making the module easier to understand, test, and maintain.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image.png}
+    \caption{Cohesion spectrum from low (coincidental) to high (functional). Higher cohesion means the module's elements are more closely related in purpose. Aim for the right side of this spectrum.}
+    \label{fig:cohesion}
+\end{figure}
+
+\begin{keybox}[The Cohesion Principle]
+\textbf{Maximise cohesion within modules.}
+
+High cohesion means a module does one thing well. Its elements are strongly related, making the module:
+\begin{itemize}
+    \item Easy to name (if you struggle to name it, cohesion may be low)
+    \item Easy to understand without examining other modules
+    \item Easy to test with focused test cases
+    \item Easy to reuse in other contexts
+\end{itemize}
+\end{keybox}
+
+Types of cohesion, from lowest (worst) to highest (best):
+
+\subsubsection{Coincidental Cohesion (Lowest)}
+
+Elements are grouped arbitrarily with no meaningful relationship. This often results from poor organisation or ``utility'' classes that accumulate unrelated functions.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Utilities:
+    """Coincidental cohesion: unrelated functions grouped together."""
+    def parse_date(self, s): ...
+    def calculate_tax(self, income): ...
+    def send_email(self, to, body): ...
+    def compress_image(self, img): ...
+\end{lstlisting}
+
+\subsubsection{Logical Cohesion}
+
+Elements perform similar categories of tasks but are otherwise unrelated. They are grouped because they ``do similar things'' at an abstract level.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class InputHandler:
+    """Logical cohesion: all handle 'input' but are unrelated."""
+    def read_file(self, path): ...
+    def read_keyboard(self): ...
+    def read_network(self, socket): ...
+    def read_sensor(self, device): ...
+\end{lstlisting}
+
+\subsubsection{Temporal Cohesion}
+
+Elements are grouped because they execute at the same time, not because they are logically related.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def startup():
+    """Temporal cohesion: things that happen at startup."""
+    load_config()
+    connect_database()
+    initialise_cache()
+    start_logging()
+    warm_up_ml_model()
+\end{lstlisting}
+
+\subsubsection{Procedural Cohesion}
+
+Elements are grouped because they follow a specific sequence, but each step may serve different purposes.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def process_order():
+    """Procedural cohesion: follows a sequence."""
+    validate_input()
+    check_inventory()
+    calculate_total()
+    process_payment()
+    send_confirmation()
+\end{lstlisting}
+
+\subsubsection{Communicational Cohesion}
+
+Elements operate on the same data but perform different operations on it.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class CustomerReport:
+    """Communicational cohesion: all work with customer data."""
+    def __init__(self, customer):
+        self.customer = customer
+
+    def get_purchase_history(self): ...
+    def calculate_lifetime_value(self): ...
+    def get_preferences(self): ...
+\end{lstlisting}
+
+\subsubsection{Sequential Cohesion}
+
+Elements form a pipeline where output of one becomes input to the next.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class DataPipeline:
+    """Sequential cohesion: data flows through stages."""
+    def extract(self, source): ...   # Returns raw data
+    def transform(self, raw): ...    # Returns cleaned data
+    def load(self, cleaned): ...     # Stores final result
+\end{lstlisting}
+
+\subsubsection{Functional Cohesion (Highest)}
+
+All elements contribute to a single, well-defined task. This is the ideal.
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class StackCalculator:
+    """Functional cohesion: everything serves stack-based calculation."""
+    def __init__(self):
+        self.stack = []
+
+    def push(self, value):
+        self.stack.append(value)
+
+    def pop(self):
+        return self.stack.pop()
+
+    def add(self):
+        self.push(self.pop() + self.pop())
+\end{lstlisting}
+
+\begin{rigour}[Coupling and Cohesion Trade-off]
+Coupling and cohesion are related but distinct:
+\begin{itemize}
+    \item \textbf{High cohesion} (good): Elements within a module are strongly related
+    \item \textbf{Low coupling} (good): Modules have minimal dependencies on each other
+\end{itemize}
+These goals usually align: modules with high cohesion tend to have cleaner interfaces, reducing coupling to other modules. However, excessive pursuit of cohesion can lead to many tiny modules with high coupling between them. Balance is key.
+\end{rigour}
+
+
+\subsection{Information Hiding}
+\label{subsec:information-hiding}
+
+\textbf{Information hiding}, introduced by David Parnas in 1972, is the principle that modules should conceal their internal details from other modules.
+
+\begin{keybox}[The Information Hiding Principle]
+\textbf{Not all parts of a system need to know everything.}
+
+Each module should:
+\begin{itemize}
+    \item Expose a minimal, stable interface
+    \item Hide implementation details that might change
+    \item Protect internal state from external modification
+\end{itemize}
+This enables changing a module's internals without affecting code that uses it.
+\end{keybox}
+
+\textbf{Why hide information?}
+
+\begin{itemize}
+    \item \textbf{Reduced complexity}: Users of a module need only understand its interface, not its implementation.
+    \item \textbf{Change isolation}: Internal changes do not propagate to other modules.
+    \item \textbf{Error prevention}: External code cannot corrupt internal state.
+    \item \textbf{Modularity}: Hidden details can be optimised or replaced without affecting users.
+\end{itemize}
+
+\begin{redbox}[Global Variables and Information Hiding]
+Global variables violate information hiding-they expose state to the entire program. Any module can read or modify a global variable, creating implicit dependencies and making behaviour difficult to reason about.
+
+Prefer passing data explicitly through function parameters and return values.
+\end{redbox}
+
+\textbf{Public vs Private in Python}
+
+Python uses naming conventions to indicate visibility:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+class Model:
+    def __init__(self):
+        self.public_attribute = 1      # Public: part of the interface
+        self._private_attribute = 2    # Private by convention
+        self.__mangled_attribute = 3   # Name-mangled (harder to access)
+
+    def fit(self, X, y):
+        """Public method: part of the promised interface."""
+        self._internal_fit(X, y)
+
+    def _internal_fit(self, X, y):
+        """Private method: implementation detail, may change."""
+        pass
+\end{lstlisting}
+
+\begin{itemize}
+    \item \textbf{No underscore}: Public. The developer promises to maintain this interface.
+    \item \textbf{Single underscore} (\texttt{\_name}): Private by convention. External code should not rely on it.
+    \item \textbf{Double underscore} (\texttt{\_\_name}): Name-mangled to \texttt{\_ClassName\_\_name}. Harder to access accidentally, but still not truly private.
+\end{itemize}
+
+\begin{rigour}[Information Hiding and Encapsulation]
+Information hiding and encapsulation are related but distinct:
+\begin{itemize}
+    \item \textbf{Information hiding} is a design principle: decide what to reveal and what to conceal
+    \item \textbf{Encapsulation} is a mechanism: bundling data and methods, with access controls
+\end{itemize}
+Encapsulation is one way to implement information hiding, but information hiding is the broader goal. You can have encapsulation without information hiding (if you expose all internals as public).
+\end{rigour}
+
+
+\section{Connecting Paradigms to Data Structures and Algorithms}
+\label{sec:paradigms-dsa}
+
+Programming paradigms are not merely academic distinctions-they fundamentally shape how we implement and think about data structures and algorithms.
+
+\begin{keybox}[Paradigm-Algorithm Connections]
+\begin{itemize}
+    \item \textbf{Imperative}: Natural for in-place algorithms (sorting arrays, modifying graphs). Loop-based traversals and explicit state management.
+
+    \item \textbf{Functional}: Natural for recursive algorithms (tree traversals, divide-and-conquer). Immutable data structures and compositional design.
+
+    \item \textbf{Object-Oriented}: Natural for encapsulating data structure operations (stack, queue, linked list classes). Polymorphism enables generic algorithms.
+
+    \item \textbf{Declarative}: Natural for query and transformation operations (filtering, mapping, aggregating). Lets the system optimise execution.
+\end{itemize}
+\end{keybox}
+
+\textbf{Practical implications:}
+
+\begin{itemize}
+    \item \textbf{Recursion vs iteration}: Functional thinking helps with recursive data structures (trees, linked lists) and algorithms (merge sort, quicksort). Understanding both approaches lets you choose the clearer implementation.
+
+    \item \textbf{Encapsulation and ADTs}: Object-oriented principles underpin abstract data types (ADTs). A stack is defined by its operations (\texttt{push}, \texttt{pop}, \texttt{peek}), not its implementation (array vs linked list).
+
+    \item \textbf{Coupling and algorithm design}: Low-coupling principles guide modular algorithm design. Helper functions should communicate through clean interfaces, not shared state.
+
+    \item \textbf{Cohesion and code organisation}: High-cohesion principles suggest keeping related algorithms together. A \texttt{GraphAlgorithms} module containing BFS, DFS, and shortest-path algorithms has communicational cohesion (all operate on graphs).
+\end{itemize}
+
+Understanding paradigms equips you to choose the right tool for each problem and to write code that others can understand, test, and maintain.
+

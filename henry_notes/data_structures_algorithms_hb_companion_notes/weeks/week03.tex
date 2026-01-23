@@ -1,0 +1,870 @@
+% Week 3: Common Data Structures
+% Covers: Functions, Turing machines, Church-Turing thesis, computability,
+% halting problem, data types, stacks, queues, trees, memory storage
+
+\chapter{Common Data Structures}
+\label{ch:common-data-structures}
+
+This week bridges the theoretical foundations of computation with the practical data structures you will use throughout your programming career. We begin by formalising what it means for a function to be computable, leading us to the Turing machine-a simple yet powerful abstraction that defines the limits of algorithmic computation. Understanding these limits helps us appreciate both what algorithms can achieve and what lies forever beyond their reach.
+
+We then turn to the fundamental data structures-arrays, linked lists, stacks, queues, and trees-that form the building blocks of virtually every program. The choice of data structure profoundly affects algorithm efficiency, and understanding how these structures are stored in memory illuminates why certain operations are fast while others are slow.
+
+\section{Functions and Computability}
+\label{sec:functions}
+
+\begin{rigour}[Definition: Function]
+A \textbf{function} $f: X \to Y$ is a mapping from a set $X$ (the \emph{domain}) to a set $Y$ (the \emph{codomain} or \emph{range}). For each element $x \in X$, there exists exactly one corresponding element $f(x) \in Y$.
+
+More precisely, a function is a relation $f \subseteq X \times Y$ such that:
+\begin{enumerate}
+    \item For every $x \in X$, there exists some $y \in Y$ with $(x, y) \in f$.
+    \item If $(x, y_1) \in f$ and $(x, y_2) \in f$, then $y_1 = y_2$.
+\end{enumerate}
+\end{rigour}
+
+The concept of a function is central to programming: every program can be viewed as implementing a function that maps inputs to outputs. However, a crucial question arises: \emph{can every mathematically definable function be computed by a program?}
+
+The answer, perhaps surprisingly, is \textbf{no}. There exist well-defined mathematical functions that no algorithm can compute. To make this precise, we need to formalise what ``computation'' means.
+
+\begin{keybox}[Not All Functions Are Computable]
+There are infinitely more functions than there are possible programs. This follows from a counting argument:
+\begin{itemize}
+    \item The set of all programs is \emph{countable} (each program is a finite string of symbols)
+    \item The set of all functions $\mathbb{N} \to \{0, 1\}$ is \emph{uncountable} (by Cantor's diagonal argument)
+\end{itemize}
+Therefore, ``most'' functions cannot be computed by any program. This is not a limitation of current technology-it is a fundamental mathematical fact.
+\end{keybox}
+
+
+\section{Turing Machines}
+\label{sec:turing-machine}
+
+The Turing machine, introduced by Alan Turing in 1936, provides a precise mathematical definition of computation. Despite its simplicity, it captures the full power of any physically realisable computer.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{turing machine.png}
+    \caption{Schematic of a Turing machine. The machine reads and writes symbols on an infinite tape, moves left or right, and transitions between states according to a finite set of rules.}
+    \label{fig:turing-machine}
+\end{figure}
+
+\begin{rigour}[Definition: Turing Machine]
+A \textbf{Turing machine} consists of:
+\begin{enumerate}
+    \item An \textbf{infinite tape} divided into cells, each containing a symbol from a finite alphabet $\Gamma$ (including a blank symbol $\sqcup$)
+    \item A \textbf{head} that can read and write symbols, and move left or right
+    \item A \textbf{finite set of states} $Q$, including a start state $q_0$ and halt states
+    \item A \textbf{transition function} $\delta: Q \times \Gamma \to Q \times \Gamma \times \{L, R\}$
+\end{enumerate}
+
+At each step, based on the current state and the symbol under the head, the transition function determines:
+\begin{itemize}
+    \item The new state to enter
+    \item The symbol to write (replacing the current symbol)
+    \item The direction to move the head (Left or Right)
+\end{itemize}
+\end{rigour}
+
+A Turing machine typically has a finite number of meaningful states that encode the ``phase'' of computation. For example, a machine performing addition might have states such as:
+\begin{itemize}
+    \item \texttt{START} - initial state, reading the first operand
+    \item \texttt{ADD} - performing addition on current digit
+    \item \texttt{CARRY} - propagating a carry to the next digit
+    \item \texttt{OVERFLOW} - handling overflow condition
+    \item \texttt{RETURN} - moving back to output position
+    \item \texttt{HALT} - computation complete, machine stops
+\end{itemize}
+
+The power of the Turing machine lies not in the complexity of individual operations (each step is trivially simple) but in the ability to chain arbitrarily many steps together. This simple model can simulate any algorithm that can be expressed in any programming language.
+
+
+\subsection{The Church--Turing Thesis}
+\label{subsec:church-turing}
+
+\begin{keybox}[The Church--Turing Thesis]
+\textbf{Any function that can be computed algorithmically can be computed by a Turing machine.}
+
+This is a \emph{thesis}, not a theorem-it cannot be mathematically proved because ``algorithmically computable'' is an informal notion. However, the thesis is supported by:
+\begin{itemize}
+    \item Every formal model of computation ever proposed (lambda calculus, recursive functions, cellular automata, quantum computers) has been shown equivalent in power to Turing machines
+    \item No one has ever found a counterexample-a function computable by some other means but not by a Turing machine
+\end{itemize}
+\end{keybox}
+
+The Church--Turing thesis guides the design and analysis of algorithms. If you can describe an algorithm in any reasonable computational model, you can be confident it is Turing-computable. Conversely, if something is not computable by a Turing machine, no programming language or computer architecture can compute it.
+
+
+\subsection{Computable Functions}
+\label{subsec:computable-functions}
+
+What makes a function computable? The following criteria characterise functions that a Turing machine (or equivalently, any programming language) can compute:
+
+\begin{rigour}[Criteria for Computability]
+A function $f: X \to Y$ is \textbf{computable} if there exists a Turing machine $M$ such that:
+\begin{enumerate}
+    \item \textbf{Finite instructions}: Given any input $x \in X$ encoded on the tape, $M$ follows a finite, unambiguous sequence of steps.
+    \item \textbf{Halts on valid inputs}: For every $x$ in the domain, $M$ eventually reaches a halt state with $f(x)$ on the tape.
+    \item \textbf{Behaviour on invalid inputs}: For inputs not in the domain, $M$ either never halts or enters an error state (this behaviour is permitted but not required to be consistent).
+\end{enumerate}
+\end{rigour}
+
+Computable functions have two important characteristics:
+
+\begin{itemize}
+    \item \textbf{Deterministic}: Given the same input, the machine follows the exact same sequence of steps and produces the same output. There is no randomness in the transition function (though we can simulate randomness if provided with a random input).
+    \item \textbf{Algorithmic}: The computation is specified by clear, finite instructions that could in principle be followed mechanically. There is no appeal to intuition, creativity, or infinite processes.
+\end{itemize}
+
+
+\subsection{Turing Completeness}
+\label{subsec:turing-completeness}
+
+\begin{rigour}[Definition: Turing Completeness]
+A computational system is \textbf{Turing complete} if it can simulate any Turing machine. Equivalently, it can compute any computable function, given enough time and memory.
+
+A system is Turing complete if and only if it supports:
+\begin{enumerate}
+    \item \textbf{Conditional branching}: The ability to execute different instructions based on data values (e.g., \texttt{if} statements)
+    \item \textbf{Arbitrary memory access}: The ability to read and write to an unbounded memory store
+    \item \textbf{Repetition}: Either loops (\texttt{while}, \texttt{for}) or recursion
+\end{enumerate}
+\end{rigour}
+
+\begin{keybox}[Practical Implications of Turing Completeness]
+Most modern programming languages-Python, Java, C++, JavaScript, Haskell-are Turing complete. This means:
+\begin{itemize}
+    \item Any algorithm that can be expressed in one language can be expressed in any other
+    \item The choice of language does not affect what is \emph{computable}, only what is \emph{convenient}
+    \item Even seemingly simple systems (e.g., Excel with iterative calculation, Conway's Game of Life, certain card games) can be Turing complete
+\end{itemize}
+\end{keybox}
+
+Python, for instance, is Turing complete because it provides:
+
+\begin{tcolorbox}[colback=white, colframe=gray!50!black]
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Conditional branching
+if condition:
+    do_something()
+
+# Loops (repetition)
+while running:
+    process()
+
+for item in collection:
+    handle(item)
+
+# Recursion (alternative repetition mechanism)
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+# Arbitrary memory access (via data structures)
+memory = {}
+memory[address] = value
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{redbox}[Turing Completeness Has Consequences]
+Turing completeness is a double-edged sword. If a system is Turing complete, it inherits all the limitations of Turing machines:
+\begin{itemize}
+    \item Programs can loop forever (non-halting behaviour)
+    \item It is impossible to automatically verify arbitrary properties of programs
+    \item Security vulnerabilities can arise from unexpected computational power
+\end{itemize}
+Some systems (e.g., configuration languages, SQL without recursion) are deliberately \emph{not} Turing complete to avoid these issues.
+\end{redbox}
+
+
+\section{The Halting Problem}
+\label{sec:halting-problem}
+
+The halting problem is the most famous undecidable problem in computer science. It demonstrates a fundamental limitation on what computers can determine about their own behaviour.
+
+\begin{rigour}[The Halting Problem]
+\textbf{Problem statement}: Given a description of a program $P$ and an input $I$, determine whether $P$ will eventually halt (stop executing) when run on input $I$, or whether it will run forever.
+
+\textbf{Undecidability}: There is no algorithm that solves the halting problem for all possible program-input pairs. That is, no program $H(P, I)$ can exist that:
+\begin{itemize}
+    \item Returns \texttt{HALTS} if $P(I)$ terminates
+    \item Returns \texttt{LOOPS} if $P(I)$ runs forever
+\end{itemize}
+for all choices of $P$ and $I$.
+\end{rigour}
+
+Before proving undecidability, let us see that some specific programs can be analysed:
+
+\begin{tcolorbox}[colback=white, colframe=gray!50!black, title={Example: A Non-Halting Program}]
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+x = 1
+while x != 0:
+    x = x + 1
+\end{lstlisting}
+\textbf{Analysis}:
+\begin{itemize}
+    \item Initial value: $x = 1$
+    \item Loop condition: continue while $x \neq 0$
+    \item Loop body: increment $x$ by 1
+    \item Since $x$ starts at 1 and increases, it never equals 0. The loop runs \textbf{forever}.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white, colframe=gray!50!black, title={Example: A Halting Program}]
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+x = 0
+while x != 0:
+    x = x + 1
+\end{lstlisting}
+\textbf{Analysis}:
+\begin{itemize}
+    \item Initial value: $x = 0$
+    \item Loop condition: continue while $x \neq 0$
+    \item Since $x = 0$ initially, the condition is false from the start. The loop body never executes, and the program \textbf{halts immediately}.
+\end{itemize}
+\end{tcolorbox}
+
+While specific programs can often be analysed, the key result is that \emph{no general algorithm} works for all programs.
+
+
+\subsection{Proof of Undecidability via Self-Reference}
+\label{subsec:halting-proof}
+
+The proof that the halting problem is undecidable uses a clever self-referential argument-a diagonalisation technique similar to Cantor's proof that the real numbers are uncountable.
+
+\begin{rigour}[Proof by Contradiction]
+Suppose, for the sake of contradiction, that a halting oracle $H$ exists. That is, $H(P, I)$ is a program that:
+\begin{itemize}
+    \item Returns \texttt{True} if program $P$ halts on input $I$
+    \item Returns \texttt{False} if program $P$ runs forever on input $I$
+\end{itemize}
+
+We construct a \emph{paradoxical program} $D$ (for ``diagonal'') as follows:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def D(P):
+    """A paradoxical program that defies the halting oracle."""
+    if H(P, P):      # If P halts when given itself as input...
+        while True:  # ...then loop forever
+            pass
+    else:            # If P loops forever when given itself...
+        return       # ...then halt immediately
+\end{lstlisting}
+
+Now we ask: \textbf{What happens when we run $D(D)$?}-that is, we feed $D$ its own source code as input.
+
+\textbf{Case 1}: Suppose $D(D)$ halts.
+\begin{itemize}
+    \item Then $H(D, D)$ returns \texttt{True} (since the oracle correctly predicts halting)
+    \item But then $D$ enters the \texttt{while True} loop and runs forever
+    \item Contradiction: $D(D)$ both halts and runs forever
+\end{itemize}
+
+\textbf{Case 2}: Suppose $D(D)$ runs forever.
+\begin{itemize}
+    \item Then $H(D, D)$ returns \texttt{False} (since the oracle correctly predicts non-halting)
+    \item But then $D$ executes \texttt{return} and halts
+    \item Contradiction: $D(D)$ both runs forever and halts
+\end{itemize}
+
+Both cases lead to contradiction. Therefore, our assumption that $H$ exists must be false. \textbf{No halting oracle can exist.} \qed
+\end{rigour}
+
+\begin{keybox}[Why Self-Reference Works]
+The key insight is that programs can inspect and manipulate other programs (including themselves) because programs are just data-strings of characters that can be passed as input.
+
+This ``programs are data'' principle is fundamental:
+\begin{itemize}
+    \item Compilers take programs as input
+    \item Interpreters execute programs represented as data
+    \item Debuggers analyse running programs
+    \item The halting problem asks us to analyse programs \emph{about} programs
+\end{itemize}
+Self-reference creates the paradox: we build a program whose behaviour contradicts any prediction about it.
+\end{keybox}
+
+\begin{redbox}[Implications for Software Development]
+The undecidability of the halting problem has practical consequences:
+\begin{itemize}
+    \item \textbf{No perfect bug detector}: You cannot write a program that detects all infinite loops
+    \item \textbf{No perfect optimiser}: Determining if code is dead (unreachable) is undecidable in general
+    \item \textbf{No perfect verifier}: Automatically proving that a program satisfies its specification is impossible in general
+\end{itemize}
+This does not mean analysis tools are useless-they can catch many bugs-but they must either be incomplete (miss some bugs), unsound (report false positives), or require human assistance.
+\end{redbox}
+
+
+\section{Data Types}
+\label{sec:data-types}
+
+Having established the theoretical foundation of computation, we now turn to the practical question of how data is represented and organised in programs. Data types define both how values are stored in memory and what operations are valid on those values.
+
+\subsection{Primitive Data Types}
+\label{subsec:primitive-types}
+
+\textbf{Integers} come in two main varieties:
+\begin{itemize}
+    \item \textbf{Unsigned integers}: Represent non-negative whole numbers. An $n$-bit unsigned integer can represent values from $0$ to $2^n - 1$.
+    \item \textbf{Signed integers}: Represent positive and negative whole numbers, typically using two's complement representation. An $n$-bit signed integer can represent values from $-2^{n-1}$ to $2^{n-1} - 1$.
+\end{itemize}
+
+\textbf{Floating-point numbers} represent fractions and very large or small numbers using scientific notation encoded in binary. The IEEE 754 standard defines formats like 32-bit (float) and 64-bit (double) with a sign bit, exponent, and mantissa. Floating-point arithmetic involves trade-offs between range and precision (covered in Week 2).
+
+\textbf{Text} is represented using character encodings:
+\begin{itemize}
+    \item \textbf{ASCII}: 7-bit encoding for 128 characters (English letters, digits, punctuation, control characters)
+    \item \textbf{Unicode}: Variable-width encoding supporting over 140,000 characters from virtually all writing systems. UTF-8 is the most common encoding, using 1--4 bytes per character.
+\end{itemize}
+
+
+\subsection{Lists}
+\label{subsec:lists}
+
+In Python, the \textbf{list} is the central way to organise collections of items. Lists are ordered, mutable sequences with several important properties:
+
+\begin{itemize}
+    \item \textbf{Ordered}: Elements have positions; the first element is at index 0 (the head), the last at index $-1$ (the tail)
+    \item \textbf{Heterogeneous}: A single list can contain elements of different types (integers, strings, other lists, etc.)
+    \item \textbf{Dynamic}: Lists can grow and shrink; elements can be added or removed at any position
+\end{itemize}
+
+\begin{keybox}[List Comprehensions]
+Python's list comprehensions provide a concise syntax for creating lists through transformation and filtering:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+# Basic transformation: apply function to each element
+squares = [x**2 for x in range(10)]
+
+# With filtering: include only elements satisfying a condition
+evens = [x for x in range(20) if x % 2 == 0]
+
+# Combined: transform and filter
+valid_scores = [process(v) for v in scores if v is not None]
+\end{lstlisting}
+
+List comprehensions are not just syntactic sugar-they are often faster than equivalent \texttt{for} loops because the iteration is implemented in C within the Python interpreter.
+\end{keybox}
+
+
+\subsection{Arrays}
+\label{subsec:arrays}
+
+An \textbf{array} is a specialised data structure for storing collections of elements of the \emph{same type} in contiguous memory. Unlike Python lists, arrays have fixed-size elements, enabling efficient random access.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{array.png}
+    \caption{A 2D array with shape $(3, 4)$-3 rows and 4 columns. The values 1 through 12 are stored contiguously in memory, with metadata tracking the shape.}
+    \label{fig:array}
+\end{figure}
+
+Arrays carry \textbf{metadata} that describes their structure:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+shape = (3, 4)  # 3 rows, 4 columns
+values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+\end{lstlisting}
+
+How multi-dimensional arrays map to linear memory depends on the \textbf{memory layout}:
+
+\begin{itemize}
+    \item \textbf{Row-major order} (C, NumPy default): Consecutive elements of a row are adjacent in memory. Element $(i, j)$ is at position $i \cdot \text{cols} + j$.
+    \item \textbf{Column-major order} (Fortran, MATLAB): Consecutive elements of a column are adjacent. Element $(i, j)$ is at position $j \cdot \text{rows} + i$.
+\end{itemize}
+
+\begin{rigour}[NumPy Array Fundamentals]
+NumPy provides efficient multi-dimensional arrays for numerical computing:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+import numpy as np
+
+# 1D array (vector)
+v = np.array([1, 2, 3])
+v.shape  # (3,) - tuple with one element
+
+# 2D array (matrix)
+m = np.array([[1, 2], [3, 4]])
+m.shape  # (2, 2)
+
+# Accessing elements
+m[0, 1]  # 2 (row 0, column 1)
+
+# Slicing
+m[:, 0]  # array([1, 3]) - first column
+m[1, :]  # array([3, 4]) - second row
+\end{lstlisting}
+
+Note the difference between a 1D array with shape \texttt{(3,)} and a 2D array with shape \texttt{(3, 1)} or \texttt{(1, 3)}-they have the same elements but different behaviours in operations like matrix multiplication.
+\end{rigour}
+
+
+\subsection{Hash Tables}
+\label{subsec:hash-tables}
+
+A \textbf{hash table} (called \texttt{dict} in Python) provides fast key-value lookup using a \emph{hash function}.
+
+\begin{rigour}[Definition: Hash Table]
+A hash table stores key-value pairs using the following mechanism:
+\begin{enumerate}
+    \item A \textbf{hash function} $h: K \to \{0, 1, \ldots, n-1\}$ maps each key to an index in an underlying array of size $n$
+    \item To store pair $(k, v)$: compute $i = h(k)$ and store $v$ at position $i$
+    \item To retrieve value for key $k$: compute $i = h(k)$ and return the value at position $i$
+\end{enumerate}
+
+\textbf{Collision handling}: Different keys may hash to the same index. Common strategies include:
+\begin{itemize}
+    \item \textbf{Chaining}: Each array position holds a linked list of all pairs that hash there
+    \item \textbf{Open addressing}: On collision, probe subsequent positions until an empty slot is found
+\end{itemize}
+\end{rigour}
+
+\begin{keybox}[Hash Table Performance]
+With a good hash function and appropriate table size:
+\begin{itemize}
+    \item \textbf{Average case}: $O(1)$ for insertion, deletion, and lookup
+    \item \textbf{Worst case}: $O(n)$ if all keys hash to the same position (pathological)
+\end{itemize}
+Python's \texttt{dict} uses sophisticated techniques to maintain near-constant time operations in practice.
+\end{keybox}
+
+
+\section{Stacks and Queues}
+\label{sec:stacks-queues}
+
+Stacks and queues are \emph{restricted} data structures-lists with constrained access patterns. These constraints, far from being limitations, make the structures simpler to reason about and enable important algorithms.
+
+\subsection{The Stack}
+\label{subsec:stack}
+
+\begin{rigour}[Definition: Stack]
+A \textbf{stack} is a linear data structure supporting two operations:
+\begin{itemize}
+    \item \textbf{Push}: Add an element to the top of the stack
+    \item \textbf{Pop}: Remove and return the top element
+\end{itemize}
+Stacks follow the \textbf{LIFO} (Last In, First Out) principle: the most recently added element is the first to be removed.
+\end{rigour}
+
+\textbf{Intuition}: Think of a stack of books or plates. You can only add to or remove from the top. Attempting to access items below the top requires first removing all items above them.
+
+\textbf{Metaphor}: Leaving breadcrumbs while exploring a maze. Each step forward pushes a breadcrumb; each step backward pops one to retrace your path.
+
+\begin{keybox}[Applications of Stacks]
+\begin{itemize}
+    \item \textbf{Function call stack}: When a function calls another, the return address is pushed; on return, it is popped
+    \item \textbf{Expression evaluation}: Parsing and evaluating arithmetic expressions
+    \item \textbf{Undo functionality}: Each action is pushed; undo pops and reverses
+    \item \textbf{Depth-first search}: Exploring graphs using backtracking
+    \item \textbf{Bracket matching}: Checking that parentheses are balanced
+\end{itemize}
+\end{keybox}
+
+In Python, you can use a list as a stack with \texttt{append()} to push and \texttt{pop()} to pop:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+stack = []
+stack.append(1)  # Push 1: stack = [1]
+stack.append(2)  # Push 2: stack = [1, 2]
+stack.append(3)  # Push 3: stack = [1, 2, 3]
+top = stack.pop()  # Pop: top = 3, stack = [1, 2]
+\end{lstlisting}
+
+This is efficient because Python lists are implemented as dynamic arrays that grow from the end, making \texttt{append()} and \texttt{pop()} both $O(1)$ amortised operations.
+
+
+\subsection{Queues}
+\label{subsec:queues}
+
+\begin{rigour}[Definition: Queue]
+A \textbf{queue} is a linear data structure supporting two operations:
+\begin{itemize}
+    \item \textbf{Enqueue}: Add an element to the back (tail) of the queue
+    \item \textbf{Dequeue}: Remove and return the front (head) element
+\end{itemize}
+Queues follow the \textbf{FIFO} (First In, First Out) principle: elements are processed in the order they arrived.
+\end{rigour}
+
+\textbf{Intuition}: Think of a queue of people waiting at a shop. New arrivals join at the back; the person at the front is served first.
+
+\textbf{Metaphor}: A buffer of tasks to accomplish. Tasks enter the buffer as they arrive and are processed in arrival order.
+
+\begin{keybox}[Applications of Queues]
+\begin{itemize}
+    \item \textbf{Breadth-first search}: Exploring graphs level by level
+    \item \textbf{Task scheduling}: Processing jobs in arrival order
+    \item \textbf{Print spooling}: Documents printed in submission order
+    \item \textbf{Message passing}: Asynchronous communication between processes
+    \item \textbf{Buffering}: Smoothing out differences in processing rates
+\end{itemize}
+\end{keybox}
+
+\begin{redbox}[Python List as Queue: Inefficient!]
+While you \emph{can} use a Python list as a queue with \texttt{append()} and \texttt{pop(0)}, this is inefficient:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+queue = []
+queue.append(1)  # Enqueue: O(1) - adds to end
+queue.append(2)
+first = queue.pop(0)  # Dequeue: O(n) - shifts all elements!
+\end{lstlisting}
+
+The \texttt{pop(0)} operation is $O(n)$ because every remaining element must be shifted left to fill the gap. For a proper queue, use \texttt{collections.deque}:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+from collections import deque
+queue = deque()
+queue.append(1)     # O(1)
+queue.popleft()     # O(1) - efficient!
+\end{lstlisting}
+\end{redbox}
+
+
+\section{Trees}
+\label{sec:trees}
+
+Trees are hierarchical data structures that model relationships with a natural parent-child structure. They appear throughout computer science, from file systems to parsing to search algorithms.
+
+\begin{rigour}[Definition: Tree]
+A \textbf{tree} is a connected, acyclic graph consisting of:
+\begin{itemize}
+    \item \textbf{Nodes}: The elements of the tree
+    \item \textbf{Edges}: Connections between nodes (each node except the root has exactly one parent)
+    \item \textbf{Root}: The topmost node with no parent
+    \item \textbf{Leaves} (terminal nodes): Nodes with no children
+    \item \textbf{Internal nodes}: Nodes with at least one child
+\end{itemize}
+
+The \textbf{depth} of a node is its distance from the root (number of edges on the path). The \textbf{height} of the tree is the maximum depth of any node-equivalently, the length of the longest path from root to leaf.
+\end{rigour}
+
+\begin{keybox}[Common Tree Types]
+\begin{itemize}
+    \item \textbf{Binary tree}: Each node has at most two children (left and right)
+    \item \textbf{Binary search tree (BST)}: Binary tree where left subtree contains smaller values, right subtree contains larger values. Enables $O(\log n)$ search in balanced trees.
+    \item \textbf{Balanced trees} (AVL, Red-Black): BSTs with guaranteed $O(\log n)$ height through rebalancing
+    \item \textbf{Heaps}: Complete binary trees satisfying the heap property (parent $\geq$ children for max-heap). Used for priority queues.
+    \item \textbf{Tries}: Trees for storing strings, where each path from root represents a prefix
+\end{itemize}
+\end{keybox}
+
+Trees provide efficient operations for many problems:
+\begin{itemize}
+    \item Searching, inserting, and deleting in sorted data: $O(\log n)$ for balanced BSTs
+    \item Representing hierarchical data (file systems, organisation charts)
+    \item Expression parsing (syntax trees)
+    \item Decision processes (game trees, decision trees in ML)
+\end{itemize}
+
+
+\section{Storage and Memory}
+\label{sec:storage}
+
+Understanding how data structures are stored in memory is crucial for analysing algorithm performance. The choice between different storage strategies-contiguous versus linked-has profound implications for operation efficiency.
+
+\subsection{Pointers}
+\label{subsec:pointers}
+
+\begin{rigour}[Definition: Pointer]
+A \textbf{pointer} is a variable that stores the memory address of another value. Instead of containing data directly, a pointer ``points to'' where the data is located.
+
+In low-level terms:
+\begin{itemize}
+    \item Memory is a large array of bytes, each with a unique address
+    \item A pointer is an integer (the address) stored in memory, representing the location of another piece of data
+    \item \textbf{Dereferencing} a pointer means accessing the data at the address it contains
+\end{itemize}
+\end{rigour}
+
+Pointers enable:
+\begin{itemize}
+    \item \textbf{Indirection}: Referring to data without copying it
+    \item \textbf{Dynamic data structures}: Linked lists, trees, graphs where connections are represented by pointers
+    \item \textbf{Sharing}: Multiple variables can point to the same data
+    \item \textbf{Dynamic memory allocation}: Creating data structures whose size is determined at runtime
+\end{itemize}
+
+In Python, pointers are implicit. Variables are references (pointers) to objects, though Python hides the memory addresses from you. When you write \texttt{x = [1, 2, 3]}, the variable \texttt{x} holds a pointer to the list object.
+
+
+\subsection{Garbage Collection}
+\label{subsec:garbage-collection}
+
+When programs allocate memory dynamically, they must eventually release it. \textbf{Garbage collection} automates this process.
+
+\begin{rigour}[Definition: Garbage Collection]
+\textbf{Garbage collection} is automatic memory management that identifies and reclaims memory no longer in use by the program. The collector:
+\begin{enumerate}
+    \item Maintains a record of all active variables and their associated memory locations
+    \item Traces which memory locations are \emph{reachable}-accessible through some chain of references from active variables
+    \item Reclaims \emph{unreachable} memory-locations that no variable can access
+\end{enumerate}
+\end{rigour}
+
+\begin{keybox}[Why Garbage Collection Matters]
+\begin{itemize}
+    \item \textbf{Prevents memory leaks}: Forgetting to free memory causes programs to consume ever more memory
+    \item \textbf{Prevents dangling pointers}: Freeing memory still in use causes crashes and security vulnerabilities
+    \item \textbf{Simplifies programming}: Developers focus on logic, not memory bookkeeping
+\end{itemize}
+Python, Java, and JavaScript use garbage collection. C and C++ require manual memory management (or smart pointers).
+\end{keybox}
+
+
+\subsection{Passing by Value vs.\ Reference}
+\label{subsec:pass-by-value-reference}
+
+When you pass a variable to a function, what does the function receive? This is one of the most important distinctions in programming language semantics.
+
+\begin{rigour}[Pass by Value vs.\ Pass by Reference]
+\textbf{Pass by value}: The function receives a \emph{copy} of the argument's value. Modifications inside the function do not affect the original variable.
+
+\textbf{Pass by reference}: The function receives a \emph{reference} (pointer) to the original data. Modifications inside the function \emph{do} affect the original.
+\end{rigour}
+
+Consider this Python example:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def increment_value(x):
+    x = x + 1  # Creates a new integer object
+    return x
+
+a = 1
+output = increment_value(a)
+print(a, output)  # Output: 1 2
+\end{lstlisting}
+
+Here, \texttt{a} remains 1 because integers are immutable in Python. The line \texttt{x = x + 1} creates a new integer object rather than modifying the original.
+
+Now consider a mutable object:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def append_item(lst):
+    lst.append(4)  # Modifies the list in place
+
+my_list = [1, 2, 3]
+append_item(my_list)
+print(my_list)  # Output: [1, 2, 3, 4]
+\end{lstlisting}
+
+The list is modified because \texttt{lst} and \texttt{my\_list} refer to the same object. Python uses ``pass by object reference'': the function receives a copy of the reference, not a copy of the object.
+
+\begin{keybox}[Python's Pass-by-Object-Reference]
+Python is neither purely pass-by-value nor pass-by-reference:
+\begin{itemize}
+    \item The \emph{reference} is copied (like pass-by-value)
+    \item But the reference points to the \emph{same object} (enabling reference-like behaviour)
+\end{itemize}
+
+\textbf{Immutable objects} (int, str, tuple): Behave like pass-by-value because modification creates a new object
+
+\textbf{Mutable objects} (list, dict, set): Behave like pass-by-reference because in-place modification affects the original
+
+To avoid modifying the original, explicitly copy: \texttt{lst.copy()} or \texttt{list(lst)}
+\end{keybox}
+
+\begin{redbox}[Common Pitfall: Mutable Default Arguments]
+A notorious Python gotcha:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def add_item(item, lst=[]):  # Default list created ONCE
+    lst.append(item)
+    return lst
+
+print(add_item(1))  # [1]
+print(add_item(2))  # [1, 2] -- unexpected!
+\end{lstlisting}
+
+The default list is created once when the function is defined, not each time it is called. Use \texttt{None} as default instead:
+
+\begin{lstlisting}[language=Python, basicstyle=\ttfamily\small]
+def add_item(item, lst=None):
+    if lst is None:
+        lst = []
+    lst.append(item)
+    return lst
+\end{lstlisting}
+\end{redbox}
+
+
+\subsection{Memory Storage Strategies}
+\label{subsec:memory-storage}
+
+Data structures can be stored in memory using two fundamental strategies, each with distinct trade-offs.
+
+\subsubsection{Contiguous Storage (Arrays)}
+\label{subsubsec:contiguous-storage}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{contiguous lists.png}
+    \caption{Contiguous storage: elements occupy consecutive memory addresses. Knowing the base address and element size, any element can be accessed directly by computing its address.}
+    \label{fig:contiguous-storage}
+\end{figure}
+
+In \textbf{contiguous storage}, elements are stored in consecutive memory locations:
+
+\begin{itemize}
+    \item \textbf{Random access in $O(1)$}: To access element $i$, compute address = base + $i \times$ element\_size
+    \item \textbf{Cache-friendly}: Consecutive elements are loaded together into CPU cache, improving performance for sequential access
+    \item \textbf{Fixed element size required}: All elements must have the same size (or you need additional indirection)
+\end{itemize}
+
+However, contiguous storage has significant drawbacks for dynamic operations:
+
+\begin{itemize}
+    \item \textbf{Insertion is $O(n)$}: Inserting at position $i$ requires shifting all subsequent elements
+    \item \textbf{Deletion is $O(n)$}: Deleting at position $i$ requires shifting all subsequent elements to fill the gap
+    \item \textbf{Resizing is expensive}: Growing beyond allocated capacity requires allocating new memory and copying all elements
+\end{itemize}
+
+\subsubsection{Linked Storage (Linked Lists)}
+\label{subsubsec:linked-storage}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{linked lists1.png}
+    \caption{Linked storage: each node contains data and a pointer to the next node. Nodes can be anywhere in memory; the pointers connect them logically.}
+    \label{fig:linked-storage-intro}
+\end{figure}
+
+In \textbf{linked storage}, each element (node) contains data plus a pointer to the next element:
+
+\begin{itemize}
+    \item \textbf{Dynamic size}: No pre-allocated capacity needed; grows and shrinks naturally
+    \item \textbf{Flexible element sizes}: Each node can contain different amounts of data
+    \item \textbf{Efficient insertion/deletion}: Once you have a pointer to a node, inserting or deleting nearby takes $O(1)$
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{linked lists.png}
+    \caption{Insertion and deletion in a linked list. To remove a node, redirect the previous node's pointer to skip it. To insert, create a new node and update two pointers.}
+    \label{fig:linked-list-operations}
+\end{figure}
+
+To \textbf{delete} a node: change one pointer (the previous node's ``next'' pointer skips the deleted node)
+
+To \textbf{insert} a node: allocate a new node and change two pointers (previous node points to new node; new node points to what was previously next)
+
+However, linked lists sacrifice random access:
+
+\begin{itemize}
+    \item \textbf{Access is $O(n)$}: To reach element $i$, you must traverse from the head through $i$ nodes
+    \item \textbf{Cache-unfriendly}: Nodes are scattered in memory, causing cache misses
+    \item \textbf{Memory overhead}: Each node requires extra space for the pointer(s)
+\end{itemize}
+
+\begin{keybox}[Choosing Between Arrays and Linked Lists]
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Operation} & \textbf{Array} & \textbf{Linked List} \\
+\midrule
+Access by index & $O(1)$ & $O(n)$ \\
+Search (unsorted) & $O(n)$ & $O(n)$ \\
+Insert at beginning & $O(n)$ & $O(1)$ \\
+Insert at end & $O(1)$ amortised & $O(1)$ with tail pointer \\
+Insert in middle & $O(n)$ & $O(1)$ after finding position \\
+Delete & $O(n)$ & $O(1)$ after finding position \\
+Memory overhead & Low & Higher (pointers) \\
+Cache performance & Excellent & Poor \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Use arrays when}: Random access is frequent, size is predictable, cache performance matters
+
+\textbf{Use linked lists when}: Frequent insertions/deletions at arbitrary positions, size varies dramatically
+\end{keybox}
+
+
+\subsubsection{Storing Stacks}
+\label{subsubsec:storing-stacks}
+
+Stacks can be efficiently implemented using contiguous storage with a \textbf{stack pointer}:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{stack storage.png}
+    \caption{Stack storage using an array. The stack pointer indicates the top of the stack. Push increments the pointer and writes; pop reads and decrements.}
+    \label{fig:stack-storage}
+\end{figure}
+
+\begin{itemize}
+    \item Reserve a contiguous block of memory for the stack
+    \item Maintain a \textbf{stack pointer} indicating the current top
+    \item \textbf{Push}: Increment pointer, write value at new top position
+    \item \textbf{Pop}: Read value at top position, decrement pointer
+\end{itemize}
+
+Both operations are $O(1)$ and access only the end of the array, making this extremely efficient. The call stack in most programming languages works this way, which is why ``stack overflow'' errors occur when recursion is too deep-the reserved stack memory is exhausted.
+
+
+\subsubsection{Storing Queues}
+\label{subsubsec:storing-queues}
+
+Queues present a challenge: both ends need efficient access. A clever solution is the \textbf{circular queue} (or ring buffer):
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\linewidth]{storing queues.png}
+    \caption{Circular queue implementation. The array wraps around: after the last position comes the first. Head and tail pointers track the front and back of the queue.}
+    \label{fig:queue-storage}
+\end{figure}
+
+\begin{itemize}
+    \item Reserve a fixed-size array
+    \item Maintain two pointers: \textbf{head} (front, where dequeue occurs) and \textbf{tail} (back, where enqueue occurs)
+    \item When a pointer reaches the end of the array, it wraps around to the beginning
+    \item \textbf{Enqueue}: Write at tail, advance tail (with wraparound)
+    \item \textbf{Dequeue}: Read at head, advance head (with wraparound)
+\end{itemize}
+
+\begin{rigour}[Circular Queue Implementation]
+With array size $n$:
+\begin{itemize}
+    \item Enqueue: \texttt{tail = (tail + 1) \% n}
+    \item Dequeue: \texttt{head = (head + 1) \% n}
+    \item Empty when: \texttt{head == tail}
+    \item Full when: \texttt{(tail + 1) \% n == head}
+\end{itemize}
+
+Note: We sacrifice one slot to distinguish empty from full (alternatively, maintain a count). This gives $O(1)$ for both operations with fixed memory.
+\end{rigour}
+
+The circular queue elegantly solves the problem of efficiently accessing both ends of a sequence without shifting elements. It is used extensively in operating systems (for I/O buffers), networking (packet queues), and producer-consumer scenarios.
+
+
+\section{Summary}
+\label{sec:week3-summary}
+
+\begin{keybox}[Week 3 Key Concepts]
+\textbf{Theory of Computation}:
+\begin{itemize}
+    \item Not all mathematical functions are computable
+    \item Turing machines formalise what ``computable'' means
+    \item The Church--Turing thesis: any algorithm can be expressed as a Turing machine
+    \item Turing completeness: a system that can simulate any Turing machine
+    \item The halting problem is undecidable-no general algorithm can determine if arbitrary programs terminate
+\end{itemize}
+
+\textbf{Data Structures}:
+\begin{itemize}
+    \item \textbf{Arrays}: Contiguous storage, $O(1)$ random access, $O(n)$ insertion/deletion
+    \item \textbf{Linked lists}: Pointer-based, $O(n)$ access, $O(1)$ insertion/deletion at known positions
+    \item \textbf{Stacks}: LIFO, push/pop at one end only
+    \item \textbf{Queues}: FIFO, enqueue at back, dequeue at front
+    \item \textbf{Hash tables}: $O(1)$ average-case lookup using hash functions
+    \item \textbf{Trees}: Hierarchical structure, $O(\log n)$ operations when balanced
+\end{itemize}
+
+\textbf{Memory Concepts}:
+\begin{itemize}
+    \item Pointers enable indirection and dynamic data structures
+    \item Garbage collection automates memory management
+    \item Pass-by-value copies data; pass-by-reference shares data
+    \item Storage strategy (contiguous vs.\ linked) determines operation efficiency
+\end{itemize}
+\end{keybox}
+
+The concepts from this week form the vocabulary for algorithm analysis. When we say an algorithm is $O(n)$ or $O(\log n)$, we are implicitly assuming certain data structure operations take certain amounts of time. Understanding \emph{why} array access is $O(1)$ while linked list access is $O(n)$ is essential for choosing the right data structure for a given problem.

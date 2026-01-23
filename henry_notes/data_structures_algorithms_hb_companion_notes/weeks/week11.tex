@@ -1,0 +1,884 @@
+% Week 11: Intractability
+% Topics: Polynomial vs exponential time, P and NP, NP-completeness, reductions
+
+\chapter{Intractability}
+\label{ch:intractability}
+
+\section{Introduction and Motivation}
+\label{sec:intractability-intro}
+
+Throughout this course, we have studied algorithms that solve problems efficiently-greedy algorithms, divide-and-conquer strategies, dynamic programming, and graph algorithms. These represent the ``easy'' problems: those solvable in polynomial time. But not all problems are so tractable.
+
+This week, we confront the limits of efficient computation. We will encounter problems for which no fast algorithm is known, and for which there is strong theoretical evidence that no fast algorithm exists. Understanding these limits is crucial: it tells us when to stop searching for an efficient exact algorithm and instead pursue approximations, heuristics, or problem restructuring.
+
+\begin{keybox}[Why Intractability Matters]
+Understanding computational intractability allows us to:
+\begin{itemize}
+    \item Recognise when a problem is fundamentally hard (not just lacking a clever solution)
+    \item Justify using approximation algorithms or heuristics
+    \item Identify when problem constraints can be relaxed to enable tractability
+    \item Understand the theoretical foundations of cryptography and security
+\end{itemize}
+\end{keybox}
+
+\subsection{Classifying Computational Problems}
+
+We can broadly classify problems by their computational complexity:
+
+\begin{enumerate}
+    \item \textbf{Tractable (polynomial time):} Problems solvable in time $\mathcal{O}(n^k)$ for some constant $k$. These are computationally feasible even for large inputs.
+    \item \textbf{Intractable (exponential time):} Problems requiring time $\mathcal{O}(c^n)$ for some constant $c > 1$. These become infeasible very quickly as input size grows.
+\end{enumerate}
+
+Some problems are \emph{provably} exponential due to their combinatorial nature:
+
+\begin{itemize}
+    \item \textbf{Decision problems with exhaustive search requirements:} Determining whether a program halts within $k$ steps, or solving position-based strategy games like $n \times n$ chess or checkers. These require examining an immense number of possibilities, each affected by the sequence of moves leading to them.
+    \item \textbf{Strategic games:} In chess or checkers, a minor change early in the game can drastically alter the outcome. Solving these often requires considering nearly all possible future moves, leading to a combinatorial explosion.
+\end{itemize}
+
+However, many problems \textbf{defy easy classification}:
+
+\begin{itemize}
+    \item \textbf{The Halting Problem:} It is undecidable whether arbitrary programs will halt. For specific instances, it might be provable, but no general algorithm exists.
+    \item \textbf{Problems in the ``grey zone'':} Many optimisation and search problems have no known polynomial-time algorithm, yet we cannot prove they require exponential time.
+\end{itemize}
+
+\begin{redbox}[Implications for Algorithm Design]
+If a problem is known to be exponential, researchers focus on heuristic or approximate solutions rather than exact ones. Conversely, proving that a problem previously thought to be exponential can actually be solved in polynomial time would revolutionise fields like cryptography, logistics, and artificial intelligence.
+\end{redbox}
+
+%--------------------------
+\section{Complexity Class P: Polynomial-Time Algorithms}
+\label{sec:class-p}
+
+\begin{rigour}[Definition: Complexity Class P]
+The complexity class \textbf{P} (Polynomial time) consists of all decision problems that can be solved by a deterministic Turing machine in time $\mathcal{O}(n^k)$ for some constant $k$, where $n$ is the size of the input.
+
+Equivalently, a problem is in P if there exists an algorithm that:
+\begin{enumerate}
+    \item Always produces the correct answer (yes/no for decision problems)
+    \item Runs in time bounded by a polynomial function of the input size
+\end{enumerate}
+\end{rigour}
+
+\begin{keybox}[Class P: Key Characteristics]
+\textbf{P} represents the class of ``efficiently solvable'' problems:
+\begin{itemize}
+    \item Running time is $\mathcal{O}(n^k)$ for some constant $k$
+    \item Algorithms scale reasonably as input size increases
+    \item Considered tractable and computationally feasible
+\end{itemize}
+\end{keybox}
+
+\subsection{What Makes Polynomial Time ``Efficient''?}
+
+The definition of polynomial time is deliberately broad and robust:
+
+\begin{itemize}
+    \item \textbf{Scalability:} Polynomial-time algorithms grow at a manageable rate. Doubling the input size increases running time by a factor of at most $2^k$, which remains bounded.
+    \item \textbf{Practical constants:} In practice, polynomial algorithms tend to have small constants and small degrees-$3n^2$ rather than $10^8 n^2$; $\mathcal{O}(n^2)$ rather than $\mathcal{O}(n^{100})$.
+    \item \textbf{Contrast with exponential:} An algorithm running in $2^n$ time becomes infeasible even for modest inputs. For $n = 100$, $2^{100} \approx 10^{30}$ operations-far beyond any computer's capability.
+\end{itemize}
+
+\subsection{Easy vs Hard: A Surprising Dichotomy}
+
+Many problems that appear similar have vastly different complexities:
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{In P (tractable)} & \textbf{Probably not in P} \\
+\hline
+Shortest Path & Longest Path \\
+Minimum Cut & Maximum Cut \\
+2-SAT & 3-SAT \\
+Planar 4-Colouring & Planar 3-Colouring \\
+Bipartite Vertex Cover & General Vertex Cover \\
+Matching & 3D-Matching \\
+Primality Testing & Integer Factorisation \\
+Linear Programming & Integer Linear Programming \\
+\hline
+\end{tabular}
+\end{center}
+
+This table reveals a remarkable pattern: small changes to problem definitions can shift them from tractable to (apparently) intractable. Understanding \emph{why} this happens is the central goal of complexity theory.
+
+%--------------------------
+\section{Polynomial-Time Reductions}
+\label{sec:reductions}
+
+Reductions are the fundamental tool for comparing the difficulty of computational problems. The core idea is simple: if we can transform any instance of problem $X$ into an instance of problem $Y$, then solving $Y$ also solves $X$.
+
+\begin{rigour}[Definition: Polynomial-Time Reduction]
+Problem $X$ \textbf{polynomial-time reduces} to problem $Y$, written $X \leq_p Y$, if arbitrary instances of $X$ can be solved using:
+\begin{enumerate}
+    \item A polynomial number of standard computational steps, plus
+    \item A polynomial number of calls to an oracle that solves problem $Y$
+\end{enumerate}
+
+Equivalently, there exists a polynomial-time computable function $f$ such that for any instance $x$ of problem $X$:
+\[
+x \text{ is a YES-instance of } X \iff f(x) \text{ is a YES-instance of } Y
+\]
+\end{rigour}
+
+\begin{keybox}[Polynomial Reduction: Key Insight]
+If $X \leq_p Y$, then:
+\begin{itemize}
+    \item \textbf{$Y$ is at least as hard as $X$}-a polynomial-time solution to $Y$ yields a polynomial-time solution to $X$
+    \item \textbf{Contrapositive:} If $X$ cannot be solved in polynomial time, then neither can $Y$
+\end{itemize}
+\end{keybox}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/week11/polynomial reduction.png}
+    \caption{Polynomial-time reduction from problem $X$ to problem $Y$. An instance of $X$ is transformed (in polynomial time) into an instance of $Y$. The oracle solves $Y$, and the solution is transformed back to answer $X$.}
+    \label{fig:poly-reduction}
+\end{figure}
+
+\subsection{The Reduction Process}
+
+A polynomial-time reduction from $X$ to $Y$ involves three steps:
+
+\begin{enumerate}
+    \item \textbf{Transform the input:} Convert any instance of $X$ into an instance of $Y$. This transformation must run in polynomial time.
+    \item \textbf{Solve the transformed problem:} Use the oracle (or algorithm) for $Y$ to solve the transformed instance.
+    \item \textbf{Interpret the solution:} Convert the solution back to the context of $X$. This step must also run in polynomial time.
+\end{enumerate}
+
+\subsection{Understanding the Direction of Reductions}
+
+The notation $X \leq_p Y$ can be confusing. Let us clarify what it does and does not imply:
+
+\begin{redbox}[Common Misconceptions About Reductions]
+Given $X \leq_p Y$:
+\begin{itemize}
+    \item \textcolor{red}{\textbf{FALSE:}} ``If $X$ can be solved in polynomial time, then so can $Y$''
+
+    \emph{Why wrong:} The reduction only goes one direction. $Y$ could be harder than $X$.
+
+    \item \textcolor{red}{\textbf{FALSE:}} ``$X$ can be solved in polynomial time if and only if $Y$ can''
+
+    \emph{Why wrong:} This assumes bidirectional reduction. $Y$ might have other, harder aspects not captured by $X$.
+
+    \item \textcolor{green!50!black}{\textbf{TRUE:}} ``If $X$ cannot be solved in polynomial time, then neither can $Y$''
+
+    \emph{Why true:} If $Y$ were polynomial-time solvable, we could solve $X$ in polynomial time via the reduction-contradicting our assumption.
+
+    \item \textcolor{red}{\textbf{FALSE:}} ``If $Y$ cannot be solved in polynomial time, then neither can $X$''
+
+    \emph{Why wrong:} $X$ might be easier than $Y$ and have alternative solution methods.
+\end{itemize}
+\end{redbox}
+
+\textbf{Intuition:} Think of $Y$ as a powerful engine and $X$ as a machine that uses this engine. If the engine ($Y$) works efficiently, the machine ($X$) works efficiently. But a broken engine tells us nothing about whether we could build the machine differently.
+
+\subsection{Polynomial Equivalence}
+
+When reductions exist in both directions, the problems are equally hard:
+
+\begin{rigour}[Definition: Polynomial Equivalence]
+If both $X \leq_p Y$ and $Y \leq_p X$, then $X \equiv_p Y$ (X and Y are \textbf{polynomially equivalent}).
+
+In this case, $X$ can be solved in polynomial time if and only if $Y$ can be solved in polynomial time.
+\end{rigour}
+
+Polynomial equivalence partitions problems into equivalence classes of equal difficulty.
+
+%--------------------------
+\section{Classic Reductions: Vertex Cover and Independent Set}
+\label{sec:vc-is}
+
+We now demonstrate reductions through two fundamental graph problems that turn out to be polynomially equivalent.
+
+\subsection{Independent Set}
+
+\begin{rigour}[Definition: Independent Set Problem]
+\textbf{Input:} A graph $G = (V, E)$ and an integer $k$.
+
+\textbf{Question:} Does there exist a subset $S \subseteq V$ with $|S| \geq k$ such that no two vertices in $S$ are adjacent?
+
+An \textbf{independent set} is a set of vertices with no edges between any pair of them.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/week11/Independent_set.png}
+    \caption{An independent set in a graph. The highlighted vertices form an independent set of size 6-no two highlighted vertices share an edge. This graph has an independent set of size $\geq 6$ but not of size $\geq 7$.}
+    \label{fig:independent-set}
+\end{figure}
+
+\subsection{Vertex Cover}
+
+\begin{rigour}[Definition: Vertex Cover Problem]
+\textbf{Input:} A graph $G = (V, E)$ and an integer $k$.
+
+\textbf{Question:} Does there exist a subset $S \subseteq V$ with $|S| \leq k$ such that every edge in $E$ has at least one endpoint in $S$?
+
+A \textbf{vertex cover} is a set of vertices that ``covers'' all edges-every edge touches at least one vertex in the set.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/week11/Vertex_cover.png}
+    \caption{A vertex cover in a graph. The highlighted vertices form a vertex cover of size 4-every edge has at least one endpoint among the highlighted vertices. This graph has a vertex cover of size $\leq 4$ but not of size $\leq 3$.}
+    \label{fig:vertex-cover}
+\end{figure}
+
+\subsection{Intuitive Comparison}
+
+\begin{keybox}[Guard Analogy for Vertex Cover and Independent Set]
+Imagine edges as hallways and vertices as rooms:
+\begin{itemize}
+    \item \textbf{Vertex Cover:} Place guards in rooms such that every hallway is watched by at least one guard. Minimise the number of guards.
+    \item \textbf{Independent Set:} Select rooms for a party such that no two selected rooms share a hallway (guests cannot see each other). Maximise the number of rooms.
+\end{itemize}
+The key insight: in both problems, selected vertices must connect only to non-selected vertices.
+\end{keybox}
+
+\subsection{The Complement Relationship}
+
+These problems are \emph{complements} of each other:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/week11/test.png}
+    \caption{The complement relationship between vertex cover and independent set. In this graph, the white vertices form a vertex cover (every edge has at least one white endpoint), while the black vertices form an independent set (no two black vertices are adjacent). Together, they partition the vertex set.}
+    \label{fig:vc-is-complement}
+\end{figure}
+
+\begin{rigour}[Theorem: Vertex Cover $\equiv_p$ Independent Set]
+Let $G = (V, E)$ be a graph and let $S \subseteq V$. Then:
+\[
+S \text{ is a vertex cover} \iff V \setminus S \text{ is an independent set}
+\]
+
+\textbf{Proof:}
+
+$(\Rightarrow)$ Suppose $S$ is a vertex cover. Consider any edge $(u, v) \in E$. Since $S$ covers all edges, at least one of $u$ or $v$ is in $S$. Therefore, $u$ and $v$ cannot both be in $V \setminus S$. Since this holds for every edge, no two vertices in $V \setminus S$ are adjacent, so $V \setminus S$ is an independent set.
+
+$(\Leftarrow)$ Suppose $V \setminus S$ is an independent set. Consider any edge $(u, v) \in E$. Since $V \setminus S$ contains no adjacent vertices, at least one of $u$ or $v$ must be in $S$. Since this holds for every edge, $S$ covers all edges, so $S$ is a vertex cover.
+\end{rigour}
+
+\begin{keybox}[Reduction: Vertex Cover $\leftrightarrow$ Independent Set]
+\textbf{Corollary:} $G$ has a vertex cover of size $\leq k$ if and only if $G$ has an independent set of size $\geq |V| - k$.
+
+This gives us polynomial-time reductions in both directions:
+\begin{itemize}
+    \item \textbf{Vertex Cover $\leq_p$ Independent Set:} To check if $G$ has a vertex cover of size $\leq k$, check if $G$ has an independent set of size $\geq |V| - k$.
+    \item \textbf{Independent Set $\leq_p$ Vertex Cover:} To check if $G$ has an independent set of size $\geq k$, check if $G$ has a vertex cover of size $\leq |V| - k$.
+\end{itemize}
+
+Therefore: \textbf{Vertex Cover $\equiv_p$ Independent Set}
+\end{keybox}
+
+These are \emph{mirror problems}: solving one immediately solves the other by taking the complement. The reduction is trivial-no additional computation beyond complementing the vertex set.
+
+%--------------------------
+\section{Set Cover and Its Relationship to Vertex Cover}
+\label{sec:set-cover}
+
+\subsection{The Set Cover Problem}
+
+\begin{rigour}[Definition: Set Cover Problem]
+\textbf{Input:}
+\begin{itemize}
+    \item A universal set $U = \{1, 2, \ldots, n\}$ of elements
+    \item A collection $\mathcal{S} = \{S_1, S_2, \ldots, S_m\}$ of subsets of $U$
+    \item An integer $k$
+\end{itemize}
+
+\textbf{Question:} Does there exist a selection of $k$ or fewer subsets from $\mathcal{S}$ whose union equals $U$?
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/week11/set_cover.png}
+    \caption{A Set Cover instance with $U = \{1, 2, 3, 4, 5, 6, 7\}$ and six subsets. The question asks whether we can cover all elements using $k = 2$ or fewer subsets. Here, $S_c \cup S_f = \{3, 4, 5, 6\} \cup \{1, 2, 6, 7\} = U$, so yes.}
+    \label{fig:set-cover}
+\end{figure}
+
+\textbf{Practical example:} Consider building a software system with $n$ required capabilities. Each available software package provides some subset of these capabilities. Set Cover asks: can we achieve all $n$ capabilities using at most $k$ software packages?
+
+\subsection{Reduction: Vertex Cover $\leq_p$ Set Cover}
+
+We now show that Vertex Cover reduces to Set Cover, demonstrating that Set Cover is at least as hard as Vertex Cover.
+
+\begin{rigour}[Theorem: Vertex Cover $\leq_p$ Set Cover]
+Given a Vertex Cover instance $(G = (V, E), k)$, construct a Set Cover instance as follows:
+\begin{itemize}
+    \item Universal set: $U = E$ (the set of all edges)
+    \item For each vertex $v \in V$, create subset $S_v = \{e \in E : v \text{ is an endpoint of } e\}$
+    \item The collection is $\mathcal{S} = \{S_v : v \in V\}$
+    \item Use the same integer $k$
+\end{itemize}
+
+\textbf{Claim:} $G$ has a vertex cover of size $\leq k$ if and only if the constructed Set Cover instance has a solution of size $\leq k$.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/week11/VS-SC.png}
+    \caption{Reduction from Vertex Cover to Set Cover. Each vertex becomes a subset containing its incident edges. The graph on the left has vertices $\{a, b, c, d, e, f\}$ and edges $\{e_1, \ldots, e_7\}$. Selecting vertices $\{a, c\}$ as a vertex cover corresponds to selecting subsets $\{S_a, S_c\}$ in the Set Cover instance, which together cover all edges.}
+    \label{fig:vc-to-sc}
+\end{figure}
+
+\textbf{Proof of correctness:}
+
+$(\Rightarrow)$ If $V' \subseteq V$ is a vertex cover of size $k$, then selecting $\{S_v : v \in V'\}$ covers all edges. Each edge $e = (u, v)$ is covered by $S_u$ or $S_v$ (or both), since at least one endpoint is in $V'$.
+
+$(\Leftarrow)$ If $\{S_{v_1}, \ldots, S_{v_k}\}$ covers $U = E$, then $\{v_1, \ldots, v_k\}$ is a vertex cover. Each edge $e$ is in some $S_{v_i}$, meaning $v_i$ is an endpoint of $e$.
+
+\begin{redbox}[Set Cover is More General]
+Set Cover has strictly more representational power than Vertex Cover. In the reduction:
+\begin{itemize}
+    \item Each edge appears in exactly two subsets (its two endpoints)
+    \item General Set Cover instances can have elements appearing in any number of subsets
+\end{itemize}
+You cannot represent an arbitrary Set Cover instance as a Vertex Cover instance. Thus Vertex Cover $\leq_p$ Set Cover, but Set Cover $\not\leq_p$ Vertex Cover (via this type of reduction).
+\end{redbox}
+
+%--------------------------
+\section{Satisfiability and the 3-SAT Problem}
+\label{sec:sat}
+
+The Boolean Satisfiability problem (SAT) holds a special place in complexity theory as the first problem proven NP-complete.
+
+\subsection{Preliminaries: Boolean Logic}
+
+\begin{rigour}[Boolean Logic Terminology]
+\begin{itemize}
+    \item A \textbf{literal} is a Boolean variable $x$ or its negation $\neg x$
+    \item A \textbf{clause} is a disjunction (OR) of literals: e.g., $(x \lor \neg y \lor z)$
+    \item A clause is \emph{satisfied} if at least one of its literals is true
+    \item A formula in \textbf{Conjunctive Normal Form (CNF)} is a conjunction (AND) of clauses:
+    \[
+    (x_1 \lor \neg x_2) \land (x_2 \lor x_3 \lor \neg x_1) \land (\neg x_3 \lor x_1)
+    \]
+    \item A CNF formula is \emph{satisfied} if all its clauses are satisfied
+\end{itemize}
+\end{rigour}
+
+\subsection{The SAT and 3-SAT Problems}
+
+\begin{rigour}[Definition: SAT and 3-SAT]
+\textbf{SAT (Boolean Satisfiability):}
+
+\textbf{Input:} A Boolean formula $\Phi$ in CNF.
+
+\textbf{Question:} Does there exist an assignment of truth values to the variables that makes $\Phi$ true?
+
+\textbf{3-SAT:} SAT restricted to formulas where each clause contains exactly 3 literals.
+\end{rigour}
+
+\textbf{Example:} Consider the 3-SAT formula:
+\[
+\Phi = (\neg x_1 \lor x_2 \lor x_3) \land (x_1 \lor \neg x_2 \lor x_3) \land (x_1 \lor x_2 \lor \neg x_3)
+\]
+
+Is there an assignment making $\Phi$ true? Setting $x_1 = x_2 = x_3 = \text{True}$ satisfies all three clauses.
+
+\begin{keybox}[Why 3-SAT is Hard]
+With $n$ variables, there are $2^n$ possible truth assignments. Checking all of them requires exponential time. No polynomial-time algorithm is known for 3-SAT, and it is strongly believed that none exists.
+
+Note: 2-SAT (each clause has exactly 2 literals) \emph{is} solvable in polynomial time-a striking example of how a small change in problem definition can dramatically affect complexity.
+\end{keybox}
+
+\subsection{Reduction: 3-SAT $\leq_p$ Independent Set}
+
+This reduction demonstrates a powerful technique: encoding logical constraints as graph structure.
+
+\begin{rigour}[Theorem: 3-SAT $\leq_p$ Independent Set]
+Given a 3-SAT formula $\Phi$ with $k$ clauses, construct a graph $G$ as follows:
+\begin{enumerate}
+    \item For each clause, create 3 vertices (one per literal in the clause)
+    \item Connect all three vertices within each clause (forming a triangle)
+    \item Connect each literal vertex to all vertices representing its negation in other clauses
+\end{enumerate}
+
+\textbf{Claim:} $\Phi$ is satisfiable if and only if $G$ has an independent set of size $k$.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{images/week11/3-SAT.png}
+    \caption{Reduction from 3-SAT to Independent Set. Each clause becomes a triangle of three vertices. Edges within triangles ensure we pick at most one literal per clause. Edges between contradictory literals (e.g., $x_1$ and $\neg x_1$) ensure consistency: if we include $x_1$ in our independent set, we cannot include $\neg x_1$. An independent set of size $k$ (one vertex per clause) corresponds to a satisfying assignment.}
+    \label{fig:3sat-to-is}
+\end{figure}
+
+\textbf{Intuition:} The independent set constraints encode logical consistency:
+\begin{itemize}
+    \item Triangle edges force us to pick at most one literal per clause
+    \item Cross-clause edges prevent picking both $x$ and $\neg x$
+    \item An independent set of size $k$ picks exactly one true literal per clause-a satisfying assignment
+\end{itemize}
+
+\subsection{Transitivity of Reductions}
+
+\begin{keybox}[Chain of Reductions]
+Polynomial-time reductions are transitive: if $X \leq_p Y$ and $Y \leq_p Z$, then $X \leq_p Z$.
+
+This gives us:
+\begin{align*}
+\text{3-SAT} &\leq_p \text{Independent Set} \\
+\text{Independent Set} &\equiv_p \text{Vertex Cover} \\
+\text{Vertex Cover} &\leq_p \text{Set Cover}
+\end{align*}
+
+Therefore: $\text{3-SAT} \leq_p \text{Set Cover}$
+
+This chain demonstrates that Set Cover is at least as hard as 3-SAT.
+\end{keybox}
+
+%--------------------------
+\section{Reduction Strategies}
+\label{sec:reduction-strategies}
+
+Having seen several reductions, we can identify common patterns:
+
+\begin{keybox}[Common Reduction Techniques]
+\begin{enumerate}
+    \item \textbf{Simple equivalence:} Problems that are complements or duals of each other.
+
+    \emph{Example:} Independent Set $\equiv_p$ Vertex Cover
+
+    \item \textbf{Special case to general case:} Embed a restricted problem into a more general framework.
+
+    \emph{Example:} Vertex Cover $\leq_p$ Set Cover (graphs are special cases of set systems)
+
+    \item \textbf{Gadget encoding:} Construct ``gadgets''-graph or set structures that encode logical constraints.
+
+    \emph{Example:} 3-SAT $\leq_p$ Independent Set (triangles encode clause satisfaction; cross-edges encode consistency)
+
+    \item \textbf{Transitivity:} Chain existing reductions together.
+
+    \emph{Example:} 3-SAT $\leq_p$ Set Cover via Independent Set and Vertex Cover
+\end{enumerate}
+\end{keybox}
+
+%--------------------------
+\section{Decision, Search, and Optimisation Problems}
+\label{sec:decision-search-opt}
+
+Many problems come in three flavours:
+
+\begin{itemize}
+    \item \textbf{Decision:} Does a solution of a given quality exist? (Yes/No answer)
+    \item \textbf{Search:} Find a solution of a given quality (if one exists)
+    \item \textbf{Optimisation:} Find the best possible solution
+\end{itemize}
+
+\textbf{Example with Vertex Cover:}
+\begin{itemize}
+    \item \textbf{Decision:} Does $G$ have a vertex cover of size $\leq k$?
+    \item \textbf{Search:} Find a vertex cover of size $\leq k$ in $G$
+    \item \textbf{Optimisation:} Find a minimum vertex cover in $G$
+\end{itemize}
+
+\begin{rigour}[Theorem: Decision $\equiv_p$ Search $\equiv_p$ Optimisation]
+For Vertex Cover (and many similar problems), all three versions are polynomially equivalent.
+
+\textbf{Decision $\leq_p$ Search:} If we can find a vertex cover of size $\leq k$, we can certainly decide whether one exists (just check if the search succeeds).
+
+\textbf{Search $\leq_p$ Decision:} Given a decision oracle, we can find a vertex cover by:
+\begin{enumerate}
+    \item Use binary search to find the minimum $k$ such that a cover of size $\leq k$ exists
+    \item For each vertex $v$: check if $G - v$ has a cover of size $\leq k - 1$
+    \item If yes, include $v$ in the cover and recurse on $G - v$ with target $k - 1$
+    \item If no for all neighbours of some uncovered edge, backtrack
+\end{enumerate}
+
+\textbf{Optimisation $\leq_p$ Search:} Use binary search with the search algorithm.
+
+\textbf{Search $\leq_p$ Optimisation:} An optimal solution is certainly a valid solution.
+\end{rigour}
+
+This equivalence means that proving hardness for the decision version implies hardness for search and optimisation as well.
+
+%--------------------------
+\section{Complexity Class NP: Efficient Verification}
+\label{sec:class-np}
+
+\subsection{Certificates and Verification}
+
+The class NP captures problems where solutions can be \emph{verified} efficiently, even if \emph{finding} them is hard.
+
+\begin{rigour}[Definition: Certifier]
+A \textbf{certifier} for a problem is an algorithm $C(x, y)$ that takes:
+\begin{itemize}
+    \item An instance $x$ of the problem
+    \item A \textbf{certificate} (or \textbf{witness}) $y$
+\end{itemize}
+and outputs YES or NO.
+
+The certifier is \textbf{polynomial-time} if $C$ runs in time polynomial in $|x|$ (the certificate $y$ may be polynomial in $|x|$ as well).
+\end{rigour}
+
+\textbf{Example: Composite Numbers}
+
+\begin{itemize}
+    \item \textbf{Instance:} A large integer $n$
+    \item \textbf{Certificate:} A divisor $d$ with $1 < d < n$
+    \item \textbf{Certifier:} Check that $n \mod d = 0$
+\end{itemize}
+
+The certifier runs in polynomial time (division is efficient), even though finding $d$ might be hard.
+
+\subsection{The Class NP}
+
+\begin{rigour}[Definition: Complexity Class NP]
+A decision problem is in \textbf{NP} (Nondeterministic Polynomial time) if there exists a polynomial-time certifier.
+
+Equivalently: a problem is in NP if, for every YES-instance, there exists a certificate of polynomial size that can be verified in polynomial time.
+\end{rigour}
+
+\begin{keybox}[Class NP: The Verification Perspective]
+A problem is in NP if:
+
+\emph{``Given a proposed solution, I can quickly check whether it is correct.''}
+
+\begin{itemize}
+    \item We do not require that solutions can be \emph{found} quickly
+    \item We only require that solutions can be \emph{verified} quickly
+    \item This creates an asymmetry: verification may be much easier than discovery
+\end{itemize}
+\end{keybox}
+
+\textbf{Why ``Nondeterministic''?} An alternative characterisation: NP consists of problems solvable in polynomial time by a \emph{nondeterministic} Turing machine-one that can ``guess'' the right certificate and then verify it. This is equivalent to the certifier definition.
+
+\subsection{Examples of Problems in NP}
+
+\textbf{Vertex Cover is in NP:}
+\begin{itemize}
+    \item \textbf{Certificate:} A subset $S \subseteq V$ of vertices
+    \item \textbf{Verification:} Check that $|S| \leq k$ and every edge has an endpoint in $S$
+    \item This takes $\mathcal{O}(|V| + |E|)$ time-polynomial
+\end{itemize}
+
+\textbf{3-SAT is in NP:}
+\begin{itemize}
+    \item \textbf{Certificate:} An assignment of truth values to all variables
+    \item \textbf{Verification:} Check that each clause has at least one true literal
+    \item This takes $\mathcal{O}(n \cdot k)$ time where $n$ is the number of variables and $k$ is the number of clauses
+\end{itemize}
+
+\textbf{Independent Set is in NP:}
+\begin{itemize}
+    \item \textbf{Certificate:} A subset $S \subseteq V$ of vertices
+    \item \textbf{Verification:} Check that $|S| \geq k$ and no two vertices in $S$ are adjacent
+    \item This takes $\mathcal{O}(|S|^2)$ time in the worst case-polynomial
+\end{itemize}
+
+\subsection{What is NOT in NP?}
+
+Not every problem is in NP. Consider these variants of the longest path problem:
+
+\begin{enumerate}
+    \item \textbf{``Is the longest simple path $\geq k$?''} - \textbf{In NP}
+
+    Certificate: a path of length $\geq k$. Verification: check it is simple and has length $\geq k$.
+
+    \item \textbf{``Is the longest simple path $\leq k$?''} - \textbf{Not obviously in NP}
+
+    A YES answer means \emph{no path exceeds length $k$}. There is no obvious short certificate for this-we would need to argue about \emph{all} possible paths.
+
+    \item \textbf{``Find the longest simple path''} - \textbf{Not a decision problem}
+
+    NP is defined for decision problems (YES/NO answers). Optimisation problems are handled separately.
+\end{enumerate}
+
+\begin{redbox}[NP is About YES-Instances]
+NP captures problems where YES-instances have short, verifiable certificates. Problems asking for non-existence (``there is no...'') or universal properties (``for all...'') may not be in NP.
+
+The class \textbf{co-NP} captures problems where NO-instances have short certificates. Whether NP = co-NP is an open question.
+\end{redbox}
+
+%--------------------------
+\section{P, NP, and EXP: The Complexity Landscape}
+\label{sec:complexity-classes}
+
+\subsection{The Three Main Classes}
+
+\begin{rigour}[The Complexity Hierarchy]
+\begin{itemize}
+    \item \textbf{P:} Decision problems solvable in polynomial time
+    \item \textbf{NP:} Decision problems verifiable in polynomial time
+    \item \textbf{EXP:} Decision problems solvable in exponential time ($\mathcal{O}(2^{n^k})$ for some $k$)
+\end{itemize}
+\end{rigour}
+
+\subsection{Known Relationships}
+
+\begin{keybox}[Complexity Class Inclusions]
+\begin{itemize}
+    \item $\mathbf{P \subseteq NP}$: If we can \emph{solve} a problem in polynomial time, we can certainly \emph{verify} solutions in polynomial time (just solve and compare).
+
+    \item $\mathbf{NP \subseteq EXP}$: Any NP problem can be solved in exponential time by trying all possible certificates and verifying each one.
+
+    \item $\mathbf{P \neq EXP}$: This is proven-there exist problems requiring exponential time that cannot be solved in polynomial time (e.g., certain generalised games).
+\end{itemize}
+\end{keybox}
+
+\subsection{The P vs NP Question}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/week11/test1.png}
+    \caption{Two possible worlds. \textbf{Left:} If P = NP, the classes collapse-every problem with efficiently verifiable solutions also has an efficient algorithm. \textbf{Right:} If P $\neq$ NP (the prevailing belief), P is strictly contained in NP, and there exist problems that can be verified but not solved efficiently.}
+    \label{fig:p-vs-np}
+\end{figure}
+
+\begin{rigour}[The P vs NP Problem]
+\textbf{Question:} Does P = NP?
+
+\textbf{Translation:} Is every problem whose solutions can be verified quickly also solvable quickly?
+
+\textbf{Status:} One of the seven Millennium Prize Problems. Unsolved since formally posed in 1971. Most researchers believe P $\neq$ NP, but no proof exists.
+\end{rigour}
+
+\textbf{If P = NP:}
+\begin{itemize}
+    \item Every problem with efficiently checkable solutions would be efficiently solvable
+    \item Modern cryptography would collapse (e.g., RSA relies on factoring being hard)
+    \item Optimisation, scheduling, and logistics problems would become tractable
+    \item Mathematical theorem proving could be automated
+\end{itemize}
+
+\textbf{If P $\neq$ NP:}
+\begin{itemize}
+    \item There is a fundamental gap between finding and verifying
+    \item Cryptography remains secure (assuming appropriate problems are hard)
+    \item We must accept approximations and heuristics for hard problems
+\end{itemize}
+
+%--------------------------
+\section{NP-Completeness: The Hardest Problems in NP}
+\label{sec:np-complete}
+
+\subsection{Definition}
+
+\begin{rigour}[Definition: NP-Complete]
+A problem $Y$ is \textbf{NP-complete} if:
+\begin{enumerate}
+    \item $Y \in \text{NP}$ (solutions can be verified in polynomial time)
+    \item For every problem $X \in \text{NP}$: $X \leq_p Y$ (every NP problem reduces to $Y$)
+\end{enumerate}
+
+The second condition means $Y$ is \textbf{NP-hard}: at least as hard as every problem in NP.
+
+Thus: NP-complete = NP $\cap$ NP-hard.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.35\linewidth]{images/week11/venn diag.png}
+    \caption{Relationship between complexity classes (assuming P $\neq$ NP). NP-complete problems sit at the boundary of NP-the hardest problems within NP. NP-hard problems are at least as hard as NP-complete but may lie outside NP entirely.}
+    \label{fig:complexity-venn}
+\end{figure}
+
+\begin{keybox}[NP-Complete: Key Properties]
+If $Y$ is NP-complete:
+\begin{itemize}
+    \item $Y$ is a ``universal'' hard problem-solving $Y$ efficiently solves \emph{all} of NP
+    \item If $Y \in P$, then P = NP (every NP problem reduces to $Y$, so all become polynomial)
+    \item Contrapositive: if P $\neq$ NP, then no NP-complete problem is in P
+\end{itemize}
+\end{keybox}
+
+\subsection{The Cook-Levin Theorem}
+
+How do we know NP-complete problems exist? The foundational result:
+
+\begin{rigour}[Cook-Levin Theorem (1971)]
+SAT (Boolean Satisfiability) is NP-complete.
+
+This was proven by showing that any computation of a nondeterministic Turing machine can be encoded as a SAT formula. Thus every problem in NP reduces to SAT.
+\end{rigour}
+
+Once we have one NP-complete problem, we can prove others NP-complete via reduction:
+
+\begin{keybox}[Proving NP-Completeness]
+To prove problem $Y$ is NP-complete:
+\begin{enumerate}
+    \item Show $Y \in \text{NP}$ (exhibit a polynomial-time certifier)
+    \item Show $X \leq_p Y$ for some known NP-complete problem $X$
+\end{enumerate}
+
+By transitivity, if $X$ is NP-complete and $X \leq_p Y$, then every NP problem reduces to $Y$.
+\end{keybox}
+
+\subsection{Examples of NP-Complete Problems}
+
+Thousands of problems are known to be NP-complete, spanning diverse domains:
+
+\begin{itemize}
+    \item \textbf{Logic:} SAT, 3-SAT, Circuit-SAT
+    \item \textbf{Graph theory:} Vertex Cover, Independent Set, Clique, Graph Colouring, Hamiltonian Path/Cycle
+    \item \textbf{Sets and numbers:} Set Cover, Subset Sum, Partition, Bin Packing
+    \item \textbf{Scheduling:} Job Shop Scheduling, Multiprocessor Scheduling
+    \item \textbf{Optimisation:} Travelling Salesman (decision version), Knapsack (decision version)
+\end{itemize}
+
+The fact that such diverse problems are all equivalent (in terms of polynomial-time solvability) is remarkable and suggests a deep underlying structure.
+
+%--------------------------
+\section{NP-Hard: Beyond NP}
+\label{sec:np-hard}
+
+\begin{rigour}[Definition: NP-Hard]
+A problem $Y$ is \textbf{NP-hard} if every problem in NP polynomial-time reduces to $Y$.
+
+Note: $Y$ need not be in NP itself. NP-hard problems may be:
+\begin{itemize}
+    \item Decision problems outside NP (no efficient verification)
+    \item Optimisation problems (not decision problems at all)
+    \item Undecidable problems (no algorithm can solve them)
+\end{itemize}
+\end{rigour}
+
+\begin{keybox}[NP-Hard vs NP-Complete]
+\begin{itemize}
+    \item \textbf{NP-complete} = NP-hard AND in NP
+    \item \textbf{NP-hard} = at least as hard as NP-complete, but possibly harder
+\end{itemize}
+
+Every NP-complete problem is NP-hard, but not every NP-hard problem is NP-complete.
+\end{keybox}
+
+\textbf{Examples of NP-hard problems not in NP:}
+
+\begin{itemize}
+    \item \textbf{The Halting Problem:} Given a program and input, does the program halt? This is \emph{undecidable}-no algorithm can solve it for all inputs. It is NP-hard (every NP problem can be reduced to it) but not in NP (not even decidable, let alone verifiable).
+
+    \item \textbf{Optimisation versions:} ``Find the minimum vertex cover'' is NP-hard but not a decision problem. The decision version (``Is there a vertex cover of size $\leq k$?'') is NP-complete.
+\end{itemize}
+
+\begin{redbox}[Common Misconception]
+NP-hard does \emph{not} mean ``harder than NP-complete.'' The distinction is about \emph{type}, not \emph{difficulty}:
+\begin{itemize}
+    \item NP-complete problems are the hardest problems \emph{within} NP
+    \item NP-hard problems are \emph{at least as hard as} NP-complete, but may lie outside NP
+\end{itemize}
+\end{redbox}
+
+\subsection{The Landscape of Hard Problems}
+
+Most natural problems in NP fall into one of two categories:
+\begin{enumerate}
+    \item Known to be in P (efficiently solvable)
+    \item Known to be NP-complete (probably not efficiently solvable)
+\end{enumerate}
+
+A few problems remain in limbo, with neither polynomial algorithms nor NP-completeness proofs:
+\begin{itemize}
+    \item \textbf{Integer factorisation:} Given $n$, find its prime factors
+    \item \textbf{Graph isomorphism:} Given two graphs, are they structurally identical?
+    \item \textbf{Discrete logarithm:} Given $g$, $h$, $p$, find $x$ such that $g^x \equiv h \pmod{p}$
+\end{itemize}
+
+These problems are believed to be intermediate-harder than P but not NP-complete. If P $\neq$ NP, such intermediate problems must exist (Ladner's theorem).
+
+%--------------------------
+\section{Coping with NP-Complete Problems}
+\label{sec:coping}
+
+When faced with an NP-complete problem in practice, giving up is not an option. Several strategies can yield useful results:
+
+\subsection{Approximation Algorithms}
+
+\begin{keybox}[Approximation Approach]
+Accept a solution that is provably close to optimal, even if not optimal itself.
+
+\textbf{Example:} For Vertex Cover, a simple greedy algorithm achieves a 2-approximation-it finds a cover at most twice the size of the minimum.
+
+Approximation algorithms provide \textbf{guarantees}: the solution quality is bounded relative to optimal.
+\end{keybox}
+
+\subsection{Heuristics and Metaheuristics}
+
+When guarantees are not essential, heuristics can find good solutions quickly:
+
+\begin{itemize}
+    \item \textbf{Greedy heuristics:} Make locally optimal choices
+    \item \textbf{Local search:} Start with a feasible solution and iteratively improve it
+    \item \textbf{Simulated annealing:} Allow occasional worse moves to escape local optima
+    \item \textbf{Genetic algorithms:} Evolve a population of solutions
+\end{itemize}
+
+These methods often work well in practice but offer no worst-case guarantees.
+
+\subsection{Special Cases and Problem Structure}
+
+Many NP-complete problems become tractable under restrictions:
+
+\begin{itemize}
+    \item \textbf{Vertex Cover on trees:} Solvable in linear time (dynamic programming)
+    \item \textbf{2-SAT:} Polynomial time (unlike 3-SAT)
+    \item \textbf{Planar graphs:} Many problems are easier on planar graphs
+    \item \textbf{Bounded treewidth:} Many NP-complete problems are polynomial on graphs with bounded treewidth
+\end{itemize}
+
+\begin{redbox}[Practical Wisdom]
+Before applying general-purpose methods to an NP-complete problem:
+\begin{enumerate}
+    \item Check if your specific instances have exploitable structure
+    \item Consider whether approximate solutions suffice
+    \item Evaluate the actual instance sizes you face-exponential algorithms may be acceptable for small $n$
+\end{enumerate}
+\end{redbox}
+
+\subsection{Exponential Algorithms Done Well}
+
+Even when polynomial time is impossible, we can still optimise:
+
+\begin{itemize}
+    \item \textbf{Branch and bound:} Prune the search space using bounds
+    \item \textbf{Dynamic programming over subsets:} Often achieves $\mathcal{O}(2^n \cdot \text{poly}(n))$ rather than naive $\mathcal{O}(n!)$
+    \item \textbf{Parameterised complexity:} Identify parameters that, when small, make the problem tractable
+\end{itemize}
+
+\subsection{Connection to Machine Learning}
+
+The intractability of finding optimal solutions motivates many machine learning techniques:
+
+\begin{itemize}
+    \item \textbf{Gradient descent} finds local optima, not global optima-but this often suffices
+    \item \textbf{Regularisation} trades optimality for generalisation
+    \item \textbf{Ensemble methods} combine multiple suboptimal solutions
+\end{itemize}
+
+Just as we accept local minima in neural network training, we can accept approximate solutions to NP-complete problems. The key insight: a good-enough solution found quickly often beats an optimal solution found too late.
+
+%--------------------------
+\section{Summary}
+\label{sec:intractability-summary}
+
+\begin{keybox}[Complexity Classes Summary]
+\begin{itemize}
+    \item \textbf{P} - Problems \emph{solvable} in polynomial time (``easy to solve'')
+    \item \textbf{NP} - Problems \emph{verifiable} in polynomial time (``easy to check'')
+    \item \textbf{NP-complete} - The hardest problems in NP; if any is in P, then P = NP
+    \item \textbf{NP-hard} - At least as hard as NP-complete; may be outside NP
+    \item \textbf{EXP} - Problems solvable in exponential time (``really hard'')
+\end{itemize}
+
+Known: $\text{P} \subseteq \text{NP} \subseteq \text{EXP}$ and $\text{P} \neq \text{EXP}$.
+
+Unknown: Whether $\text{P} = \text{NP}$ (most believe P $\neq$ NP).
+\end{keybox}
+
+\begin{keybox}[Practical Takeaways]
+\begin{enumerate}
+    \item \textbf{Recognise intractability:} If your problem is NP-complete, do not waste time seeking an efficient exact algorithm.
+
+    \item \textbf{Prove hardness via reduction:} Show $X \leq_p Y$ where $X$ is known NP-complete to establish $Y$ is NP-hard.
+
+    \item \textbf{Exploit structure:} Special cases may be tractable even when the general problem is not.
+
+    \item \textbf{Accept approximation:} A good solution now often beats a perfect solution never.
+
+    \item \textbf{Understand the landscape:} P, NP, NP-complete, and NP-hard form a coherent framework for reasoning about computational difficulty.
+\end{enumerate}
+\end{keybox}

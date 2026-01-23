@@ -1,0 +1,70 @@
+
+\title{Data Structures \& Algorithms: Assignment 2}
+\author{Henry Baker}
+\date{\today}
+
+\maketitle
+
+\section*{Question 1}
+Pull request URL: \texttt{https://github.com/lenafm/calculator\_app/pull/12}
+
+\section*{Question 2}
+
+\textbf{Going through the algorithm step-by-step:}\\
+\textit{(NB just to define the algorithm's process I am consciously using bullet points without full sentences for clarity)}
+
+The function \texttt{check\_array} does the following:
+    \begin{itemize}[noitemsep]
+        \item takes a parameter (here: \texttt{input})
+        \item \texttt{input} is presumably a list array (given function name \texttt{check\_array})
+        \item it iterates over every element in \texttt{input} (here: \texttt{idx})
+        \item if the first character of the element (\texttt{[0]}) is \texttt{1} then this function transforms the whole element to be \texttt{None}.
+        \item It then returns the newly modified array.
+    \end{itemize}
+
+Having stored values \texttt{1\_3, 5\_2} under the variable \texttt{original\_array}, this code chunk then passes the variable to the \texttt{check\_array} function. Lists in python are passed by reference and the modification is done in-place, so when we modify \texttt{input} inside the function, we make modifications at the memory location referred to by \texttt{original\_array}. So \texttt{original\_array} is modified in place. Line 9 also establishes another variable \texttt{new\_array} that refers to the same memory location (where the changes made by the function are stored). Thus both variables now 'point' (see below) to the same modified list. The output given from this code chunk is:\\
+        \texttt{[None "5\_2"]} \\
+        \texttt{[None "5\_2"]}.
+
+This behaviour is ultimately dissimilar to R and is because in python, variables that hold objects (like lists here) don't actually contain the objects themselves but references to them in memory. Thus when we pass a list to a function, we're passing a reference to that list, not a separate copy of the list (...I'm guessing this is what R does). This means that if we modify the list inside the function, the changes will reflect on the original list because both the original reference (outside the function) and the function's parameter reference (inside the function) point to the same list object in memory. This behaviour is under girded by pointers. 
+
+
+\textbf{Considering this from the perspective of pointers:}
+
+A pointer is when a memory location is encoded and stored in memory itself; variables hold pointers to memory locations. So here we first store the function’s algorithm operations in memory and assign a pointer with \texttt{check\_array} variable. We then store \texttt{["1\_3" "5\_2"]} in memory and a pointer is held to that location by \texttt{original\_array} variable. As covered above, when we pass \texttt{original\_array} to the \texttt{check\_array} function we are passing a reference to the list's memory location - as the function iterates over each element according to its index reference it is like passing a pointer to the array. The function then modifies the list and stores those results directly in place at that memory location. When line 9 establishes another variable, it has now set up 2 pointers pointing at the same memory location\\
+
+\begin{tcolorbox}
+    NB there’s no opportunity for 'garbage collection' to free up memory as both \texttt{original\_array} variable and \texttt{new array} variable continue pointing at their memory location so they remain active variables.
+\end{tcolorbox}
+
+\section*{Question 3}
+
+This represents a brute-force approach. There are ways to make it more efficient. However given our definition of efficiency where \textit{‘an algorithm is efficient if its runtime is polynomials’} it is efficient. \\
+
+The algorithm does as follows:
+\begin{enumerate}[noitemsep]
+    \item \textbf{line 2}: sets up an outer loop that iterates through each element of the array:
+    \begin{itemize}[noitemsep]
+        \item each selected index of the array is then the starting point of the contiguous subarray (whose sum we will be taking).
+    \end{itemize}
+    \item \textbf{line 4:} sets up an inner loop that iterates through the subarray starting from current element of outer loop $(i)$ to the end of the array itself.
+    \begin{itemize}[noitemsep]
+        \item The variable $j$ is the end index of the subarray being considered. This loop expands the subarray one element at a time as it iterates through the subarray.
+        \item it adds the value of the current element $(j)$ to the \texttt{sum\_subarray} variable (line 5).
+    \end{itemize}
+    \item \textbf{Lines 6 \& 7}: checks if the sum of the currently considered subarray between $i$ and $j$ is the largest value found so far (line 6). If so it saves it as \texttt{max\_sum} (line 7)
+\end{enumerate}
+
+
+This therefore accumulates all the possible sums of all possible contiguous permutations of the elements in the array and saves the iteratively largest sum encountered at that point in the algorithm. The algorithm halts when the outer loop has completed (i.e., it has indexed through the entire length of the array). \\
+
+To determine whether it is efficient or not, we take the worst case (we are seeking an upper bound). The outer loop: runs $n$ times, for each of these $n$ iterations, the inner loop runs. The inner loop depends on the position of the outer loop as it runs $n-i$ times, and $i$ is set by the outer loop. In the first iteration ($i=0$), the inner loop runs $n$ times; in the second iteration ($i=1$), it runs $n-1$ times; in the third iteration ($i=2$), it runs $n-2$ times, etc., until the final iteration ($i=n-1$), where it runs $1$ time. Thus, to find the upper bound on the total operations in nested loops, we sum the iterations of each inner loop for each possible value of the outer loop. Formally: $n + (n-1) + (n-2) + \ldots + 1$. This combinatorics series can be simplified to $\frac{n \cdot (n+1)}{2}$. \\
+
+In big O notation, we ignore constants to focus on the polynomials of $n$. In this case, to determine the order, we have an $n \times n$ element, giving us $n^2$. In big O notation, this becomes $O(n^2)$, denoting that its complexity quadratically increases with the size of the input array. Here we are in polynomial time where $d = 2$. An algorithm is efficient if its runtime is polynomial; thus, it is efficient. \\
+
+\begin{tcolorbox}
+    Nevertheless, this represents a brute force approach because there is unexploited structure here. Unless there are negative numbers, the greatest sum would simply be the very first iteration. If we wanted to be more efficient, we could take a running sum to determine the location of negative values within the array, to be able to build our sum to maximise around these negative values.
+\end{tcolorbox}
+
+
+\textit{I used ChatGPT to help explain the behaviour of pointers in Q2. I initially thought it was wrong and ran the code on my laptop to get the same result. I also used ChatGPT in my CSS stylings for the flask app}

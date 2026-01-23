@@ -1,0 +1,1249 @@
+
+\chapter{Divide and Conquer}
+
+\section{Overview}
+
+\textbf{Divide and Conquer} is one of the most powerful algorithmic paradigms in computer science. The strategy decomposes complex problems into simpler subproblems, solves each recursively, and combines the results. This approach underlies many of the most efficient algorithms we use daily.
+
+The paradigm consists of three steps:
+\begin{enumerate}
+    \item \textbf{Divide} - Break the problem into smaller subproblems of the same type. Typically, we divide a problem of size $n$ into subproblems of size $n/2$, though other divisions are possible.
+
+    \item \textbf{Conquer} - Solve each subproblem recursively. When subproblems become sufficiently small (the \emph{base case}), solve them directly.
+
+    \item \textbf{Combine} - Merge the solutions of subproblems into a solution for the original problem.
+\end{enumerate}
+
+\begin{keybox}[The Divide and Conquer Pattern]
+For most divide and conquer algorithms:
+\begin{itemize}
+    \item \textbf{Division}: Split problem of size $n$ into two subproblems of size $n/2$
+    \item \textbf{Division cost}: $O(1)$ or $O(n)$ depending on the algorithm
+    \item \textbf{Combination cost}: $O(n)$ - this is typically where the real work happens
+    \item \textbf{Resulting complexity}: Often $O(n \log n)$
+\end{itemize}
+\end{keybox}
+
+\subsection{Tools for Analysing Divide and Conquer Algorithms}
+
+To effectively understand and solve divide and conquer problems:
+
+\begin{enumerate}
+    \item \textbf{Identify the Base Case}: Determine the simplest case that can be solved directly without further division.
+    \item \textbf{Determine the Division Strategy}: Understand how to partition the problem into subproblems.
+    \item \textbf{Design the Combination Step}: Create an efficient method for integrating solutions of subproblems.
+    \item \textbf{Analyse Complexity}: Use recurrence relations and the Master Theorem to determine time and space complexity.
+\end{enumerate}
+
+\subsection{Recurrence Relations}
+
+\begin{rigour}[Recurrence Relation]
+A \textbf{recurrence relation} is an equation that expresses the $n$th term of a sequence as a function of preceding terms. For divide and conquer algorithms, recurrences capture the recursive structure of the algorithm's running time.
+
+The general form for divide and conquer recurrences is:
+\[
+T(n) = aT\left(\frac{n}{b}\right) + f(n)
+\]
+where:
+\begin{itemize}
+    \item $a$ = number of subproblems created at each recursive call
+    \item $b$ = factor by which the problem size is reduced
+    \item $f(n)$ = cost of the work done outside the recursive calls (dividing and combining)
+\end{itemize}
+\end{rigour}
+
+For the common case where we divide into two equal halves and the combination step is linear:
+\[
+T(n) = 2T\left(\frac{n}{2}\right) + O(n)
+\]
+
+This recurrence arises in many fundamental algorithms including MergeSort, and its solution is $T(n) = O(n \log n)$.
+
+%=============================================================================
+\section{MergeSort}
+%=============================================================================
+
+MergeSort is the canonical example of divide and conquer. It achieves optimal $O(n \log n)$ comparison-based sorting by recursively dividing an array, sorting each half, and merging the sorted halves.
+
+\begin{keybox}[MergeSort Summary]
+\textbf{Strategy}:
+\begin{itemize}
+    \item \textbf{Divide}: Split the array into two halves
+    \item \textbf{Conquer}: Recursively sort each half
+    \item \textbf{Combine}: Merge the two sorted halves into a single sorted array
+\end{itemize}
+\textbf{Complexity}: $T(n) = 2T(n/2) + O(n) = O(n \log n)$
+
+\textbf{Space}: $O(n)$ auxiliary space for the merge step
+\end{keybox}
+
+\subsection{Motivation: Why Do We Sort?}
+
+Sorting is fundamental to computer science and appears ubiquitously:
+
+\begin{itemize}
+    \item \textbf{Organising data} - Filesystems sort files by name, size, type, or modification date. Libraries organise books by call number. This organisation enables efficient retrieval and improves user experience.
+
+    \item \textbf{Ranking and display} - Search engines (Google), social media feeds (Facebook, Instagram), and recommendation systems all rely on sorting items by relevance scores to display ranked results.
+
+    \item \textbf{Enabling other algorithms} - Sorting is a preprocessing step for many algorithms: binary search requires sorted data, closest pair algorithms benefit from sorted coordinates, and database query optimisation relies heavily on sorted indices.
+
+    \item \textbf{Data analysis} - Finding medians, percentiles, detecting duplicates, and computing order statistics all become tractable once data is sorted.
+\end{itemize}
+
+\subsection{The MergeSort Process}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{mergesort.png}
+    \caption{MergeSort recursively divides the array until reaching single elements, then merges sorted subarrays back together.}
+    \label{fig:mergesort-overview}
+\end{figure}
+
+MergeSort works by recursively sorting the left and right halves of an array and then merging these sorted halves to create a sorted whole.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{mergesort2.png}
+    \caption{Merging two sorted halves: compare leading elements, take the smaller, and advance that pointer. The merge produces a sorted combined array.}
+    \label{fig:mergesort-merge}
+\end{figure}
+
+Consider sorting the string ``ALGORITHMS'':
+\begin{enumerate}
+    \item \textbf{Divide} into two halves: ``ALGOR'' and ``ITHMS''
+    \item \textbf{Recursively sort} each half, yielding: ``AGLOR'' and ``HIMST''
+    \item \textbf{Merge} these sorted halves:
+    \begin{itemize}
+        \item Compare ``A'' and ``H'' $\rightarrow$ take ``A''
+        \item Compare ``G'' and ``H'' $\rightarrow$ take ``G''
+        \item Compare ``L'' and ``H'' $\rightarrow$ take ``H''
+        \item Continue until all elements are merged
+    \end{itemize}
+    \item \textbf{Result}: ``AGHILMORST''
+\end{enumerate}
+
+\subsection{Implementation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{mergesort3.png}
+    \caption{MergeSort pseudocode showing the recursive structure: divide at the midpoint, recursively sort each half, then merge.}
+    \label{fig:mergesort-impl}
+\end{figure}
+
+\begin{verbatim}
+def mergeSort(array):
+    if len(array) > 1:
+        mid = len(array) // 2
+        L = array[:mid]       # Left half
+        R = array[mid:]       # Right half
+
+        mergeSort(L)          # T(n/2)
+        mergeSort(R)          # T(n/2)
+
+        # Merge step: O(n)
+        i = j = k = 0
+        while i < len(L) and j < len(R):
+            if L[i] < R[j]:
+                array[k] = L[i]
+                i += 1
+            else:
+                array[k] = R[j]
+                j += 1
+            k += 1
+
+        # Copy remaining elements from L
+        while i < len(L):
+            array[k] = L[i]
+            i += 1
+            k += 1
+
+        # Copy remaining elements from R
+        while j < len(R):
+            array[k] = R[j]
+            j += 1
+            k += 1
+\end{verbatim}
+
+\subsection{Time Complexity Analysis}
+
+The recurrence relation for MergeSort captures its recursive structure:
+
+\[
+T(n) \leq
+\begin{cases}
+0 & \text{if } n = 1 \\[6pt]
+\textcolor{red}{T\left(\left\lfloor\frac{n}{2}\right\rfloor\right)} + \textcolor{blue}{T\left(\left\lceil\frac{n}{2}\right\rceil\right)} + \textcolor{green!50!black}{O(n)} & \text{if } n > 1
+\end{cases}
+\]
+
+The terms represent:
+\begin{itemize}
+    \item $\textcolor{red}{T\left(\left\lfloor\frac{n}{2}\right\rfloor\right)}$ - time to sort the left half
+    \item $\textcolor{blue}{T\left(\left\lceil\frac{n}{2}\right\rceil\right)}$ - time to sort the right half
+    \item $\textcolor{green!50!black}{O(n)}$ - time to merge the two sorted halves (at most $n-1$ comparisons)
+\end{itemize}
+
+\subsubsection{Recursion Tree Intuition}
+
+Before applying the Master Theorem, we can build intuition from the recursion tree:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{mergesortrecursiontree.png}
+    \caption{MergeSort recursion tree. Each level performs $O(n)$ total work (across all nodes at that level). With $\log n$ levels, the total work is $O(n \log n)$.}
+    \label{fig:mergesort-tree}
+\end{figure}
+
+At each level of the recursion tree:
+\begin{itemize}
+    \item Level 0: 1 problem of size $n$ $\rightarrow$ $O(n)$ merge work
+    \item Level 1: 2 problems of size $n/2$ $\rightarrow$ $O(n)$ total merge work
+    \item Level 2: 4 problems of size $n/4$ $\rightarrow$ $O(n)$ total merge work
+    \item $\vdots$
+    \item Level $\log n$: $n$ problems of size 1 $\rightarrow$ base case
+\end{itemize}
+
+Since there are $\log n$ levels, each contributing $O(n)$ work, the total is $O(n \log n)$.
+
+\subsubsection{Master Theorem Application}
+
+\begin{rigour}[Master Theorem for MergeSort]
+For MergeSort, the recurrence is $T(n) = 2T(n/2) + O(n)$, giving us:
+\begin{itemize}
+    \item $a = 2$ (two subproblems)
+    \item $b = 2$ (each subproblem is half the size)
+    \item $f(n) = O(n)$ (linear merge cost)
+\end{itemize}
+
+Computing $\log_b a = \log_2 2 = 1$, we have $f(n) = \Theta(n^{\log_b a}) = \Theta(n^1)$.
+
+By Case 2 of the Master Theorem (when $f(n) = \Theta(n^{\log_b a})$):
+\[
+T(n) = \Theta(n^{\log_b a} \log n) = \Theta(n \log n)
+\]
+\end{rigour}
+
+\subsubsection{Formal Inductive Proof}
+
+\begin{rigour}[Proof that MergeSort is $O(n \log n)$]
+\textbf{Claim}: $T(n) \leq cn \log n$ for some constant $c > 0$ and all $n \geq 2$.
+
+\textbf{Base Case} ($n = 1$): A single-element array is trivially sorted with $T(1) = 0$ comparisons.
+
+\textbf{Inductive Hypothesis}: Assume $T(k) \leq ck \log k$ for all $k < n$.
+
+\textbf{Inductive Step}: For an array of size $n$, let $n' = \lfloor n/2 \rfloor$ and $n'' = \lceil n/2 \rceil$, so $n = n' + n''$.
+
+The recurrence gives us:
+\[
+T(n) \leq T(n') + T(n'') + n
+\]
+
+By the inductive hypothesis:
+\[
+T(n) \leq cn' \log n' + cn'' \log n'' + n
+\]
+
+Since $n' \leq n'' \leq n/2 + 1$, we have $\log n' \leq \log n''$, so:
+\[
+T(n) \leq cn' \log n'' + cn'' \log n'' + n = c(n' + n'') \log n'' + n = cn \log n'' + n
+\]
+
+Since $n'' \leq \lceil n/2 \rceil < n$ for $n > 2$, we have $\log n'' < \log n$, and for sufficiently large $c$:
+\[
+T(n) \leq cn \log n
+\]
+
+This completes the induction, proving $T(n) = O(n \log n)$.
+\end{rigour}
+
+%=============================================================================
+\section{The Sorting Lower Bound}
+%=============================================================================
+
+Having established that MergeSort achieves $O(n \log n)$ complexity, a natural question arises: can we do better? The answer, for comparison-based sorting, is no.
+
+\begin{keybox}[Sorting Lower Bound Theorem]
+Any deterministic, comparison-based sorting algorithm must make $\Omega(n \log n)$ comparisons in the worst case.
+
+This means $O(n \log n)$ is \textbf{optimal} for comparison-based sorting - MergeSort achieves this bound.
+\end{keybox}
+
+\begin{redbox}[Understanding the Lower Bound]
+This theorem establishes a \textbf{lower bound} on the \textbf{worst case}:
+\begin{itemize}
+    \item \textbf{Lower bound}: No algorithm can do better than $\Omega(n \log n)$
+    \item \textbf{Worst case}: This bound applies to the hardest inputs
+\end{itemize}
+
+Note: Some algorithms (like Bubble Sort) achieve $O(n)$ on already-sorted inputs, but this does not violate the theorem since it concerns worst-case behaviour. The theorem says: for \emph{any} comparison-based algorithm, \emph{some} input will require $\Omega(n \log n)$ comparisons.
+\end{redbox}
+
+\subsection{The Decision Tree Model}
+
+The proof uses the \textbf{decision tree model}, where we assume:
+\begin{itemize}
+    \item Elements can only be accessed through pairwise comparisons
+    \item Comparisons are the only operations that ``cost'' time
+    \item The algorithm's behaviour can be represented as a binary tree of comparison decisions
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{decision tree.png}
+    \caption{Decision tree for sorting three elements $\{a, b, c\}$. Each internal node represents a comparison; each leaf represents a permutation (sorted order). The tree must have at least $n! = 6$ leaves for $n = 3$ elements.}
+    \label{fig:decision-tree}
+\end{figure}
+
+Key observations about the decision tree:
+\begin{itemize}
+    \item Each internal node represents a comparison (e.g., ``is $a < b$?'')
+    \item Each leaf represents a unique permutation of the input
+    \item The path from root to leaf traces the comparisons made for that input
+    \item The \textbf{height} of the tree equals the worst-case number of comparisons
+\end{itemize}
+
+\subsection{The Lower Bound Proof}
+
+\begin{rigour}[Proof of the $\Omega(n \log n)$ Lower Bound]
+\textbf{Setup}: Consider sorting $n$ distinct elements. There are $n!$ possible permutations (orderings) of the input.
+
+\textbf{Key insight}: A correct sorting algorithm must distinguish between all $n!$ permutations, since each requires a different sequence of swaps to sort. Therefore, the decision tree must have at least $n!$ leaves.
+
+\textbf{Binary tree height}: A binary tree with $L$ leaves has height at least $\lceil \log_2 L \rceil$. Since our tree needs $L \geq n!$ leaves:
+\[
+\text{Height} \geq \log_2(n!)
+\]
+
+\textbf{Stirling's approximation}: Using $n! \approx \sqrt{2\pi n}\left(\frac{n}{e}\right)^n$, we get:
+\[
+\log_2(n!) = \log_2\left(\sqrt{2\pi n}\left(\frac{n}{e}\right)^n\right) = n \log_2 n - n \log_2 e + O(\log n)
+\]
+
+Therefore:
+\[
+\log_2(n!) = \Theta(n \log n)
+\]
+
+\textbf{Conclusion}: Any comparison-based sorting algorithm requires at least $\Omega(n \log n)$ comparisons in the worst case.
+\end{rigour}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{decisiontree3.png}
+    \caption{The relationship between tree height, number of leaves, and the sorting lower bound. A binary tree of height $h$ has at most $2^h$ leaves, so $2^h \geq n!$ implies $h \geq \log_2(n!) = \Omega(n \log n)$.}
+    \label{fig:sorting-lower-bound}
+\end{figure}
+
+\begin{keybox}[Implications of the Lower Bound]
+\begin{itemize}
+    \item MergeSort, HeapSort, and (average-case) QuickSort are \textbf{asymptotically optimal} among comparison-based sorts
+    \item To beat $O(n \log n)$, we must use non-comparison-based methods (Counting Sort, Radix Sort, Bucket Sort) which exploit additional structure in the data
+    \item The bound assumes only comparisons provide information about element ordering
+\end{itemize}
+\end{keybox}
+
+%=============================================================================
+\section{Counting Inversions}
+%=============================================================================
+
+\begin{keybox}[Counting Inversions]
+An \textbf{inversion} is a pair of elements that are ``out of order'' relative to the sorted sequence. Counting inversions measures how far a list is from being sorted.
+
+\textbf{Formal definition}: Given a sequence $a_1, a_2, \ldots, a_n$, an inversion is a pair $(i, j)$ where $i < j$ but $a_i > a_j$.
+
+\textbf{Key insight}: Inversions count the number of \emph{swaps} needed to sort (not just elements out of place).
+\end{keybox}
+
+\subsection{Motivation and Applications}
+
+Counting inversions has numerous applications:
+
+\begin{itemize}
+    \item \textbf{Ranking similarity}: Compare how similar two rankings are (e.g., comparing movie preferences between users for recommendation systems)
+    \item \textbf{AUC-ROC in ML}: The Area Under the ROC Curve is computed using inversion counting - it measures how well a classifier's predictions match actual labels
+    \item \textbf{Kendall tau distance}: A statistical measure of correlation between rankings
+    \item \textbf{Sorting complexity}: The number of inversions equals the number of swaps Bubble Sort would perform
+\end{itemize}
+
+\subsection{Naive Approach}
+
+The brute-force approach compares every pair:
+
+\begin{verbatim}
+def count_inversions_naive(arr):
+    count = 0
+    n = len(arr)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if arr[i] > arr[j]:
+                count += 1
+    return count
+\end{verbatim}
+
+This requires $\binom{n}{2} = O(n^2)$ comparisons - one for each pair.
+
+\subsection{Divide and Conquer Approach}
+
+We can count inversions in $O(n \log n)$ time using a modification of MergeSort:
+
+\begin{enumerate}
+    \item \textbf{Divide}: Split the list into two halves
+    \item \textbf{Conquer}: Recursively count inversions within each half
+    \item \textbf{Combine}: Count inversions between the two halves (cross-inversions)
+    \item \textbf{Return}: Sum of left inversions + right inversions + cross-inversions
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{counting_inversions.png}
+    \caption{Inversions fall into three categories: those within the left half, those within the right half, and cross-inversions between halves. Divide and conquer handles each category.}
+    \label{fig:inversion-types}
+\end{figure}
+
+The key insight is that counting cross-inversions becomes easy \textbf{if both halves are sorted}.
+
+\subsection{Sort-and-Count Algorithm}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{count_inversions_2.png}
+    \caption{With sorted halves, counting cross-inversions reduces to: when taking an element from the right half during merge, count how many elements remain in the left half (all form inversions with it).}
+    \label{fig:sort-count-idea}
+\end{figure}
+
+The algorithm merges while counting:
+\begin{itemize}
+    \item Scan both sorted lists $A$ and $B$ from left to right
+    \item Compare current elements $a_i$ and $b_j$
+    \item If $a_i \leq b_j$: element $a_i$ is not inverted with any remaining element in $B$; append $a_i$ to output
+    \item If $a_i > b_j$: element $b_j$ is inverted with \textbf{every remaining element} in $A$; add $|A| - i$ to the inversion count and append $b_j$ to output
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{count_inversions_3.png}
+    \caption{Merge-and-count in action: when $b_j < a_i$, all remaining elements in $A$ (from position $i$ onwards) form inversions with $b_j$. Here, when taking 11 from $B$, elements $\{a_i, 18\}$ remaining in $A$ each form an inversion.}
+    \label{fig:merge-count}
+\end{figure}
+
+\begin{keybox}[Sort-and-Count Insight]
+The crucial observation: since both halves are sorted, if $b_j < a_i$, then $b_j$ is also less than $a_{i+1}, a_{i+2}, \ldots$ - so we can count all these inversions in $O(1)$ rather than checking each pair individually.
+
+This is why sorting enables efficient counting: we leverage the sorted structure to avoid redundant comparisons.
+\end{keybox}
+
+\subsection{Algorithm and Analysis}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{sort_and_count.png}
+    \caption{Sort-and-Count pseudocode. The algorithm returns both the inversion count and the sorted list, enabling the divide and conquer structure.}
+    \label{fig:sort-count-algo}
+\end{figure}
+
+The algorithm simultaneously sorts and counts inversions:
+
+\textbf{Input}: List $L$
+
+\textbf{Output}:
+\begin{enumerate}
+    \item Number of inversions in $L$
+    \item $L$ in sorted order (needed for parent recursive calls)
+\end{enumerate}
+
+\begin{rigour}[Sort-and-Count Complexity]
+The recurrence relation is:
+\[
+T(n) \leq
+\begin{cases}
+O(1) & \text{if } n = O(1) \\[6pt]
+T\left(\left\lfloor\frac{n}{2}\right\rfloor\right) + T\left(\left\lceil\frac{n}{2}\right\rceil\right) + O(n) & \text{if } n > 1
+\end{cases}
+\]
+
+The $O(n)$ term covers merging and counting cross-inversions (both linear in the merge step).
+
+This is identical to MergeSort's recurrence, so Sort-and-Count runs in $O(n \log n)$ time.
+\end{rigour}
+
+\subsubsection{Worked Example}
+
+Consider the array $[2, 3, 8, 6, 1]$:
+
+\begin{enumerate}
+    \item \textbf{Divide}: $[2, 3]$ and $[8, 6, 1]$
+
+    \item \textbf{Left half} $[2, 3]$: Already sorted, 0 inversions
+
+    \item \textbf{Right half} $[8, 6, 1]$:
+    \begin{itemize}
+        \item Split into $[8]$ and $[6, 1]$
+        \item $[6, 1]$ has 1 inversion: $(6, 1)$
+        \item Merging $[8]$ with $[1, 6]$: when taking 1, one element (8) remains, so 1 inversion; when taking 6, one element (8) remains, so 1 inversion
+        \item Right half total: $1 + 1 + 1 = 3$ inversions
+    \end{itemize}
+
+    \item \textbf{Merge} $[2, 3]$ with $[1, 6, 8]$:
+    \begin{itemize}
+        \item Take 1: two elements remain in left $\{2, 3\}$, so 2 cross-inversions
+        \item Take 2: no inversion
+        \item Take 3: no inversion
+        \item Take 6, 8: no inversions
+        \item Cross-inversions: 2
+    \end{itemize}
+
+    \item \textbf{Total}: $0 + 3 + 2 = 5$ inversions
+\end{enumerate}
+
+Verification: The inversions are $(2,1), (3,1), (8,6), (8,1), (6,1)$ - indeed 5 pairs.
+
+%=============================================================================
+\section{Selection: Finding the $k$th Smallest Element}
+%=============================================================================
+
+The \textbf{selection problem} asks: given an unsorted array of $n$ elements, find the $k$th smallest element.
+
+\begin{keybox}[Selection Problem]
+\textbf{Special cases}:
+\begin{itemize}
+    \item $k = 1$: Find the minimum - trivially $O(n)$
+    \item $k = n$: Find the maximum - trivially $O(n)$
+    \item $k = \lceil n/2 \rceil$: Find the median
+\end{itemize}
+
+\textbf{Key insight}: Selection is fundamentally easier than sorting. We can find any order statistic in $O(n)$ time without sorting the entire array.
+\end{keybox}
+
+\subsection{Applications}
+
+Selection algorithms are crucial in:
+\begin{itemize}
+    \item \textbf{Order statistics}: Finding percentiles, quartiles, and medians
+    \item \textbf{Database queries}: ``Find records in the top 10th percentile''
+    \item \textbf{Machine learning}: Outlier detection, feature selection, computing robust statistics
+    \item \textbf{Algorithm design}: Many algorithms need medians or approximate medians as subroutines
+\end{itemize}
+
+\subsection{Approaches and Their Complexities}
+
+\begin{enumerate}
+    \item \textbf{Sort then index} - $O(n \log n)$
+    \begin{itemize}
+        \item Sort the array using MergeSort or similar
+        \item Return element at position $k$
+        \item Simple but suboptimal: we do more work than necessary
+    \end{itemize}
+
+    \item \textbf{Binary heap approach} - $O(n + k \log n)$ or $O(n \log k)$
+    \begin{itemize}
+        \item Build a min-heap in $O(n)$ time
+        \item Extract minimum $k$ times, each extraction costs $O(\log n)$
+        \item Alternatively, maintain a max-heap of size $k$ while scanning
+    \end{itemize}
+
+    \item \textbf{QuickSelect} - $O(n)$ expected, $O(n^2)$ worst case
+    \begin{itemize}
+        \item Partition-based approach, similar to QuickSort
+        \item Only recurse on the partition containing the $k$th element
+        \item Randomised pivot selection gives expected linear time
+    \end{itemize}
+
+    \item \textbf{Median of Medians} - $O(n)$ worst case
+    \begin{itemize}
+        \item Deterministic linear-time selection
+        \item Guarantees a good pivot, eliminating worst-case quadratic behaviour
+    \end{itemize}
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{binary tree represenation.png}
+    \caption{A binary heap structure. In a max-heap, each parent is larger than its children. Heaps enable efficient extraction of extremal elements.}
+    \label{fig:binary-heap}
+\end{figure}
+
+\subsection{3-Way Partitioning}
+
+The foundation of QuickSort and QuickSelect is the \textbf{partitioning} operation.
+
+\begin{keybox}[3-Way Partitioning]
+Given an array and a pivot element $p$, 3-way partitioning rearranges elements into three groups:
+\begin{itemize}
+    \item \textbf{Left}: Elements $< p$
+    \item \textbf{Middle}: Elements $= p$
+    \item \textbf{Right}: Elements $> p$
+\end{itemize}
+
+The pivot ends up in its \textbf{correct sorted position}. This operation runs in $O(n)$ time and $O(1)$ space.
+\end{keybox}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{3 way partition_2.png}
+    \caption{3-way partitioning: elements are rearranged so all elements less than pivot $p$ are on the left, elements equal to $p$ are in the middle, and elements greater than $p$ are on the right.}
+    \label{fig:3way-partition}
+\end{figure}
+
+\subsubsection{The Partitioning Algorithm}
+
+\begin{enumerate}
+    \item \textbf{Choose pivot}: Select element $p$ (often randomly or swap chosen element to first position)
+
+    \item \textbf{Initialise pointers}:
+    \begin{itemize}
+        \item $lt$ (less than): boundary for elements $< p$, starts at position 0
+        \item $gt$ (greater than): boundary for elements $> p$, starts at position $n-1$
+        \item $i$: current element being examined
+    \end{itemize}
+
+    \item \textbf{Partitioning loop}: Scan with index $i$ from left to right:
+    \begin{itemize}
+        \item If $A[i] < p$: swap $A[i]$ with $A[lt]$, increment both $lt$ and $i$
+        \item If $A[i] > p$: swap $A[i]$ with $A[gt]$, decrement $gt$ (do \emph{not} increment $i$ - the swapped element needs examination)
+        \item If $A[i] = p$: just increment $i$
+    \end{itemize}
+
+    \item \textbf{Terminate}: When $i > gt$, the array is partitioned
+\end{enumerate}
+
+\begin{rigour}[3-Way Partitioning Complexity]
+\textbf{Time}: $O(n)$ - each element is examined at most twice (once when $i$ reaches it, possibly once more if swapped from the right)
+
+\textbf{Space}: $O(1)$ - partitioning is done in-place using only pointer variables
+
+3-way partitioning is particularly efficient when there are many duplicate elements, as all duplicates of the pivot are grouped together and excluded from recursive calls.
+\end{rigour}
+
+\subsection{QuickSelect Algorithm}
+
+QuickSelect uses partitioning to find the $k$th smallest element without fully sorting:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{randomised quick select.png}
+    \caption{QuickSelect partitions around a random pivot, then recurses only into the partition containing position $k$. Unlike QuickSort, only one recursive call is made.}
+    \label{fig:quickselect}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Choose a random pivot} $p$
+
+    \item \textbf{3-way partition} into $L$ (elements $< p$), $M$ (elements $= p$), $R$ (elements $> p$)
+
+    \item \textbf{Recurse on the relevant partition}:
+    \begin{itemize}
+        \item If $k \leq |L|$: recurse on $L$ to find the $k$th smallest
+        \item If $|L| < k \leq |L| + |M|$: the pivot $p$ is the answer (it's in position $k$)
+        \item If $k > |L| + |M|$: recurse on $R$ to find the $(k - |L| - |M|)$th smallest
+    \end{itemize}
+\end{enumerate}
+
+\begin{keybox}[QuickSelect vs QuickSort]
+The key difference: QuickSort recurses on \emph{both} partitions; QuickSelect recurses on \emph{only one}.
+
+This single-recursion structure is why QuickSelect achieves $O(n)$ expected time rather than $O(n \log n)$.
+\end{keybox}
+
+\subsection{Analysis of Randomised QuickSelect}
+
+\subsubsection{Intuition: The Stick-Breaking Analogy}
+
+Consider breaking a stick at a random point:
+\begin{itemize}
+    \item On average, you get pieces of size $1/4$ and $3/4$ (not $1/2$ and $1/2$)
+    \item In the worst case for selection, we recurse on the larger piece
+    \item So we expect to work on a $3/4$ fraction of the array each iteration
+\end{itemize}
+
+\subsubsection{Recurrence and Solution}
+
+Let $T(n)$ be the expected number of comparisons to select from an array of size $n$.
+
+In the worst case over all $k$ values:
+\[
+T(n) \leq T\left(\frac{3n}{4}\right) + cn
+\]
+
+where $cn$ is the cost of partitioning.
+
+Expanding this recurrence:
+\[
+T(n) \leq cn + \frac{3}{4}cn + \left(\frac{3}{4}\right)^2 cn + \left(\frac{3}{4}\right)^3 cn + \cdots
+\]
+
+This is a geometric series:
+\[
+T(n) \leq cn \sum_{i=0}^{\infty} \left(\frac{3}{4}\right)^i = cn \cdot \frac{1}{1 - 3/4} = 4cn
+\]
+
+\begin{rigour}[QuickSelect Expected Complexity]
+Randomised QuickSelect runs in $O(n)$ expected time.
+
+More precisely, the expected number of comparisons is at most $4n$.
+
+\textbf{Worst case}: $O(n^2)$ if we consistently choose bad pivots (e.g., always the maximum element). However, randomisation makes this exponentially unlikely.
+\end{rigour}
+
+\begin{keybox}[Summary: Selection Complexities]
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Algorithm} & \textbf{Expected} & \textbf{Worst Case} \\
+\midrule
+Sort then index & $O(n \log n)$ & $O(n \log n)$ \\
+Heap-based & $O(n \log k)$ & $O(n \log k)$ \\
+Randomised QuickSelect & $O(n)$ & $O(n^2)$ \\
+Median of Medians & $O(n)$ & $O(n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+%=============================================================================
+\section{Closest Pair of Points}
+%=============================================================================
+
+The \textbf{closest pair problem} asks: given $n$ points in 2D, find the pair with minimum Euclidean distance.
+
+\begin{keybox}[Closest Pair Problem]
+\textbf{Input}: $n$ points $(x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n)$ in the plane
+
+\textbf{Output}: The pair of points with minimum distance
+
+\textbf{Applications}:
+\begin{itemize}
+    \item Nearest-neighbour matching in causal inference
+    \item $k$-nearest neighbour algorithms
+    \item Collision detection in graphics/games
+    \item Clustering algorithms
+\end{itemize}
+\end{keybox}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{cloest points.png}
+    \caption{The closest pair problem in 2D: among all $\binom{n}{2}$ pairs of points, find the pair with minimum Euclidean distance.}
+    \label{fig:closest-pair-problem}
+\end{figure}
+
+\subsection{Brute Force Approach}
+
+The naive approach checks all pairs:
+
+\begin{verbatim}
+def closest_pair_naive(points):
+    min_dist = infinity
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            d = distance(points[i], points[j])
+            if d < min_dist:
+                min_dist = d
+                closest = (points[i], points[j])
+    return closest
+\end{verbatim}
+
+This requires $\binom{n}{2} = O(n^2)$ distance computations.
+
+\subsection{Divide and Conquer Solution}
+
+We can solve this in $O(n \log n)$ time:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{closest_points.png}
+    \caption{Divide and conquer for closest pair: split points by a vertical line $L$, recursively find closest pairs in each half (distances 12 and 21), then check for closer pairs straddling the line (distance 8).}
+    \label{fig:closest-pair-dc}
+\end{figure}
+
+\begin{enumerate}
+    \item \textbf{Sort points} by $x$-coordinate: $O(n \log n)$ preprocessing
+
+    \item \textbf{Divide}: Draw a vertical line $L$ through the median $x$-coordinate, splitting points into left and right halves
+
+    \item \textbf{Conquer}: Recursively find the closest pair in each half
+    \begin{itemize}
+        \item Let $\delta_1$ = closest distance in left half
+        \item Let $\delta_2$ = closest distance in right half
+        \item Let $\delta = \min(\delta_1, \delta_2)$
+    \end{itemize}
+
+    \item \textbf{Combine}: Check for closer pairs that \emph{straddle} the dividing line
+    \begin{itemize}
+        \item Only points within distance $\delta$ of the line can be part of such a pair
+        \item This defines a ``strip'' of width $2\delta$ centred on $L$
+    \end{itemize}
+\end{enumerate}
+
+\begin{redbox}[The Combine Step Challenge]
+The naive combine step would check all pairs of points in the strip - potentially $O(n^2)$ if all points lie near the dividing line.
+
+The clever insight: after sorting strip points by $y$-coordinate, each point needs only be compared with a \textbf{constant number} of neighbours.
+\end{redbox}
+
+\subsection{Why Only 7 Neighbours?}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{closest_pairs_2.png}
+    \caption{In the combine step, we only consider points within distance $\delta$ of the dividing line. After sorting these by $y$-coordinate, each point needs comparison with at most 7 subsequent points.}
+    \label{fig:strip-check}
+\end{figure}
+
+Consider a point $p$ in the strip. Any point closer than $\delta$ to $p$ must lie within a $2\delta \times \delta$ rectangle (width $2\delta$ for the strip, height $\delta$ above $p$).
+
+This rectangle can be divided into 8 cells of size $\delta/2 \times \delta/2$. By the definition of $\delta$, each cell contains \textbf{at most one point} (two points in the same cell would be closer than $\delta$, contradicting our recursive solutions).
+
+Therefore, at most 7 other points can be within distance $\delta$ of $p$ in the strip. Checking 7 neighbours per point gives $O(n)$ comparisons for the combine step.
+
+\subsection{Complete Algorithm}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{closest points algo analysis.png}
+    \caption{Complete closest pair algorithm with complexity annotations. The sorting within the strip can be done in $O(n)$ per level by maintaining a separate list sorted by $y$-coordinate.}
+    \label{fig:closest-pair-algo}
+\end{figure}
+
+\begin{rigour}[Closest Pair Complexity]
+The recurrence relation is:
+\[
+T(n) =
+\begin{cases}
+O(1) & \text{if } n \leq 3 \\[6pt]
+T\left(\lfloor n/2 \rfloor\right) + T\left(\lceil n/2 \rceil\right) + O(n) & \text{if } n > 3
+\end{cases}
+\]
+
+The $O(n)$ combine step includes:
+\begin{itemize}
+    \item Finding the dividing line: $O(1)$ (median of sorted list)
+    \item Building the strip: $O(n)$
+    \item Sorting strip by $y$-coordinate: $O(n)$ (using merge from pre-sorted lists)
+    \item Checking pairs in strip: $O(n)$ (constant neighbours per point)
+\end{itemize}
+
+By the Master Theorem: $T(n) = O(n \log n)$.
+\end{rigour}
+
+\begin{keybox}[Closest Pair Summary]
+The closest pair algorithm achieves $O(n \log n)$ complexity, matching the sorting lower bound. This is optimal for comparison-based algorithms since we must at least ``see'' all points.
+
+\textbf{Key techniques}:
+\begin{itemize}
+    \item Divide by median $x$-coordinate
+    \item Recursively solve subproblems
+    \item Clever combine: only check strip, only check 7 neighbours
+\end{itemize}
+\end{keybox}
+
+%=============================================================================
+\section{Computational Geometry Applications}
+%=============================================================================
+
+Divide and conquer is particularly powerful for geometric problems. Many problems that seem to require $O(n^2)$ or worse can be solved in $O(n \log n)$ using this paradigm.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Problem} & \textbf{Brute Force} & \textbf{Divide \& Conquer} \\
+\midrule
+Closest Pair & $O(n^2)$ & $O(n \log n)$ \\
+Farthest Pair & $O(n^2)$ & $O(n \log n)$ \\
+Convex Hull & $O(n^2)$ & $O(n \log n)$ \\
+Delaunay Triangulation & $O(n^4)$ & $O(n \log n)$ \\
+Voronoi Diagram & $O(n^4)$ & $O(n \log n)$ \\
+Euclidean MST & $O(n^2)$ & $O(n \log n)$ \\
+\bottomrule
+\end{tabular}
+\caption{Complexity improvements from divide and conquer in computational geometry. The dramatic improvement for Delaunay/Voronoi from $O(n^4)$ to $O(n \log n)$ is particularly striking.}
+\label{table:geom-complexity}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{1.png}
+    \caption{Convex hull: the smallest convex polygon containing all points. Can be computed in $O(n \log n)$ using divide and conquer (e.g., the ``gift wrapping'' or Graham scan algorithms).}
+    \label{fig:convex-hull}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{image.png}
+    \caption{Farthest pair problem (computing the diameter): find the two points with maximum distance. The farthest pair always lies on the convex hull, enabling an $O(n \log n)$ algorithm.}
+    \label{fig:farthest-pair}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{3.png}
+    \caption{Delaunay triangulation: connects points such that no point lies inside the circumcircle of any triangle. Used in mesh generation, terrain modelling, and as a dual to Voronoi diagrams.}
+    \label{fig:delaunay}
+\end{figure}
+
+%=============================================================================
+\section{The Master Theorem: General Theory}
+%=============================================================================
+
+The Master Theorem provides a systematic method for solving recurrence relations of the divide and conquer form.
+
+\subsection{The General Recurrence}
+
+\begin{rigour}[Master Theorem Setup]
+Consider recurrences of the form:
+\[
+T(n) = \textcolor{red}{a} \, T\left(\frac{n}{\textcolor{blue}{b}}\right) + \textcolor{green!50!black}{O(n^c)}
+\]
+
+where:
+\begin{itemize}
+    \item $\textcolor{red}{a \geq 1}$: number of subproblems at each recursive level
+    \item $\textcolor{blue}{b > 1}$: factor by which problem size shrinks
+    \item $\textcolor{green!50!black}{c \geq 0}$: exponent in the cost of dividing/combining
+\end{itemize}
+\end{rigour}
+
+From these parameters, we can derive:
+
+\begin{itemize}
+    \item \textbf{Depth of recursion tree}: $1 + \log_b n$ levels
+
+    The problem size at level $i$ is $n/b^i$. We reach base case when $n/b^i = 1$, i.e., $i = \log_b n$.
+
+    \item \textbf{Size of subproblem at level $i$}: $n/b^i$
+
+    Each level divides by $b$.
+
+    \item \textbf{Number of subproblems at level $i$}: $a^i$
+
+    Each problem spawns $a$ subproblems, so level $i$ has $a^i$ subproblems.
+
+    \item \textbf{Work at level $i$}: $a^i \cdot (n/b^i)^c = n^c \cdot (a/b^c)^i$
+
+    This counts all $a^i$ subproblems, each of size $n/b^i$ with cost $(n/b^i)^c$.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{general theory 2.png}
+    \caption{Recursion tree for the general divide and conquer recurrence. The total work is $T(n) = n^c \sum_{i=0}^{\log_b n} r^i$ where $r = a/b^c$.}
+    \label{fig:master-tree}
+\end{figure}
+
+\subsection{The Critical Ratio}
+
+The key quantity is the \textbf{ratio} $r = a/b^c$, which determines whether work increases or decreases as we descend the tree:
+
+\begin{rigour}[Total Work Formula]
+The total work across all levels is:
+\[
+T(n) = n^c \sum_{i=0}^{\log_b n} r^i \quad \text{where } r = \frac{a}{b^c}
+\]
+
+This is a geometric series. Its behaviour depends on whether $r < 1$, $r = 1$, or $r > 1$.
+\end{rigour}
+
+\subsection{The Three Cases}
+
+\begin{keybox}[Master Theorem: Three Cases]
+Let $r = a/b^c$. The solution to $T(n) = aT(n/b) + O(n^c)$ is:
+
+\begin{enumerate}
+    \item \textbf{Case 1} ($r < 1$, equivalently $c > \log_b a$): Work decreases down the tree
+    \[
+    T(n) = O(n^c)
+    \]
+    \emph{Root-dominated}: Most work happens at the top level.
+
+    \item \textbf{Case 2} ($r = 1$, equivalently $c = \log_b a$): Work is equal at each level
+    \[
+    T(n) = O(n^c \log n)
+    \]
+    \emph{Balanced}: Work is evenly distributed, with $\log n$ levels contributing equally.
+
+    \item \textbf{Case 3} ($r > 1$, equivalently $c < \log_b a$): Work increases down the tree
+    \[
+    T(n) = O(n^{\log_b a})
+    \]
+    \emph{Leaf-dominated}: Most work happens at the bottom (base cases).
+\end{enumerate}
+\end{keybox}
+
+\subsubsection{Case 1: Root Domination ($r < 1$)}
+
+When $a < b^c$, the work at each level forms a decreasing geometric series. The sum is dominated by the first (largest) term:
+\[
+\sum_{i=0}^{\log_b n} r^i \leq \sum_{i=0}^{\infty} r^i = \frac{1}{1-r} = O(1)
+\]
+Thus $T(n) = O(n^c)$.
+
+\textbf{Example}: $T(n) = T(n/2) + n^2$ has $a=1$, $b=2$, $c=2$. Since $1 < 2^2 = 4$, we have $r < 1$, so $T(n) = O(n^2)$.
+
+\subsubsection{Case 2: Equal Distribution ($r = 1$)}
+
+When $a = b^c$, each level contributes equally:
+\[
+\sum_{i=0}^{\log_b n} r^i = \sum_{i=0}^{\log_b n} 1 = 1 + \log_b n = O(\log n)
+\]
+Thus $T(n) = O(n^c \log n)$.
+
+\textbf{Example}: MergeSort has $T(n) = 2T(n/2) + n$ with $a=2$, $b=2$, $c=1$. Since $2 = 2^1$, we have $r = 1$, so $T(n) = O(n \log n)$.
+
+\subsubsection{Case 3: Leaf Domination ($r > 1$)}
+
+When $a > b^c$, the work at each level forms an increasing geometric series. The sum is dominated by the last (largest) term:
+\[
+\sum_{i=0}^{\log_b n} r^i = \frac{r^{1+\log_b n} - 1}{r - 1} = O(r^{\log_b n}) = O\left(\frac{a^{\log_b n}}{b^{c \log_b n}}\right) = O\left(\frac{n^{\log_b a}}{n^c}\right)
+\]
+Thus $T(n) = n^c \cdot O(n^{\log_b a - c}) = O(n^{\log_b a})$.
+
+\textbf{Example}: Binary search tree traversal has $T(n) = 2T(n/2) + 1$ with $a=2$, $b=2$, $c=0$. Since $2 > 2^0 = 1$, we have $r > 1$, so $T(n) = O(n^{\log_2 2}) = O(n)$.
+
+\begin{keybox}[Master Theorem Quick Reference]
+Given $T(n) = aT(n/b) + O(n^c)$:
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+\textbf{Condition} & \textbf{Interpretation} & \textbf{Result} \\
+\midrule
+$c > \log_b a$ & Root-dominated & $T(n) = O(n^c)$ \\
+$c = \log_b a$ & Balanced & $T(n) = O(n^c \log n)$ \\
+$c < \log_b a$ & Leaf-dominated & $T(n) = O(n^{\log_b a})$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{keybox}
+
+%=============================================================================
+\section{Parallelisation of Divide and Conquer}
+%=============================================================================
+
+Divide and conquer algorithms are naturally suited to parallel execution: once a problem is divided into independent subproblems, these can be solved simultaneously on different processors.
+
+\begin{keybox}[Parallelisation Principle]
+\textbf{Key insight}: Parallelisation improves \emph{wall-clock time}, not \emph{total work}.
+
+If you have $p$ processors, you can potentially achieve a $p$-fold speedup, but the total number of operations remains the same. Parallelisation is about \emph{redistribution} of work, not \emph{reduction} of work.
+\end{keybox}
+
+\subsection{Embarrassingly Parallel Problems}
+
+An ``embarrassingly parallel'' task divides naturally into independent subtasks requiring minimal coordination:
+
+\begin{enumerate}
+    \item \textbf{High independence}: Subtasks do not depend on each other's results during execution
+    \item \textbf{Minimal communication}: Little or no data exchange between parallel tasks
+    \item \textbf{Simple combination}: Merging results incurs low overhead
+    \item \textbf{Linear scalability}: Adding processors proportionally reduces time
+\end{enumerate}
+
+\subsubsection{Example: Training a Random Forest}
+
+Random forests exemplify embarrassingly parallel computation:
+
+\begin{itemize}
+    \item \textbf{Independent trees}: Each decision tree is trained independently on a bootstrap sample
+    \item \textbf{No communication}: Trees do not share information during training
+    \item \textbf{Simple aggregation}: Final predictions combine via majority voting or averaging
+\end{itemize}
+
+With $p$ processors and $T$ trees, training time reduces from $O(T \cdot \text{tree\_cost})$ to $O(\lceil T/p \rceil \cdot \text{tree\_cost})$.
+
+\begin{redbox}[Parallelisation Overhead]
+Parallelisation is not free:
+\begin{itemize}
+    \item \textbf{Communication cost}: Distributing data and collecting results takes time
+    \item \textbf{Synchronisation}: Waiting for the slowest subtask (load balancing issues)
+    \item \textbf{Amdahl's Law}: Serial portions of the algorithm limit maximum speedup
+\end{itemize}
+
+The cost of distributing and combining work corresponds to the $O(n^c)$ term in our recurrence. For parallelisation to be worthwhile, this overhead must be small relative to the parallel gains.
+\end{redbox}
+
+%=============================================================================
+\section{Matrix Multiplication}
+%=============================================================================
+
+Matrix multiplication is a fundamental operation with applications throughout scientific computing, machine learning, and computer graphics. The standard algorithm has cubic complexity, but divide and conquer approaches can improve upon this.
+
+\subsection{Standard Matrix Multiplication}
+
+For two $n \times n$ matrices $A$ and $B$, the product $C = AB$ has entries:
+\[
+C_{ij} = \sum_{k=1}^{n} A_{ik} B_{kj}
+\]
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{dot prod.png}
+    \caption{Computing one entry of the product matrix: $C_{12}$ is the dot product of row 1 of $A$ with column 2 of $B$, requiring $n$ multiplications and $n-1$ additions.}
+    \label{fig:matrix-entry}
+\end{figure}
+
+\begin{rigour}[Standard Matrix Multiplication Complexity]
+Computing $C = AB$ for $n \times n$ matrices:
+\begin{itemize}
+    \item Each entry $C_{ij}$ requires $n$ multiplications and $n-1$ additions: $O(n)$
+    \item There are $n^2$ entries to compute
+    \item \textbf{Total}: $O(n^3)$ arithmetic operations
+\end{itemize}
+\end{rigour}
+
+\subsection{Block Matrix Multiplication}
+
+We can view matrix multiplication in terms of submatrices (blocks):
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{block multiplication.png}
+    \caption{Block matrix multiplication: partition each matrix into four $(n/2) \times (n/2)$ blocks. The product can be computed using 8 recursive multiplications of half-sized matrices plus additions.}
+    \label{fig:block-mult}
+\end{figure}
+
+Partition $A$, $B$, and $C$ into four $(n/2) \times (n/2)$ blocks:
+\[
+\begin{pmatrix} C_{11} & C_{12} \\ C_{21} & C_{22} \end{pmatrix} =
+\begin{pmatrix} A_{11} & A_{12} \\ A_{21} & A_{22} \end{pmatrix}
+\begin{pmatrix} B_{11} & B_{12} \\ B_{21} & B_{22} \end{pmatrix}
+\]
+
+The block products are:
+\begin{align*}
+C_{11} &= A_{11}B_{11} + A_{12}B_{21} \\
+C_{12} &= A_{11}B_{12} + A_{12}B_{22} \\
+C_{21} &= A_{21}B_{11} + A_{22}B_{21} \\
+C_{22} &= A_{21}B_{12} + A_{22}B_{22}
+\end{align*}
+
+This gives the recurrence:
+\[
+T(n) = 8T(n/2) + O(n^2)
+\]
+
+Here $a = 8$ (eight recursive multiplications), $b = 2$ (half-sized subproblems), and $c = 2$ (matrix additions are $O(n^2)$).
+
+Since $\log_2 8 = 3 > 2 = c$, by Case 3 of the Master Theorem:
+\[
+T(n) = O(n^{\log_2 8}) = O(n^3)
+\]
+
+This naive divide and conquer approach gives no improvement over the standard algorithm.
+
+\subsection{Strassen's Algorithm}
+
+\begin{keybox}[Strassen's Key Insight]
+Strassen (1969) discovered that the four block products can be computed using only \textbf{7 multiplications} instead of 8, at the cost of more additions.
+
+Since multiplications dominate the complexity, this reduces the exponent.
+\end{keybox}
+
+Strassen's algorithm computes seven ``helper'' matrices:
+\begin{align*}
+M_1 &= (A_{11} + A_{22})(B_{11} + B_{22}) \\
+M_2 &= (A_{21} + A_{22})B_{11} \\
+M_3 &= A_{11}(B_{12} - B_{22}) \\
+M_4 &= A_{22}(B_{21} - B_{11}) \\
+M_5 &= (A_{11} + A_{12})B_{22} \\
+M_6 &= (A_{21} - A_{11})(B_{11} + B_{12}) \\
+M_7 &= (A_{12} - A_{22})(B_{21} + B_{22})
+\end{align*}
+
+Then the result blocks are:
+\begin{align*}
+C_{11} &= M_1 + M_4 - M_5 + M_7 \\
+C_{12} &= M_3 + M_5 \\
+C_{21} &= M_2 + M_4 \\
+C_{22} &= M_1 - M_2 + M_3 + M_6
+\end{align*}
+
+\begin{rigour}[Strassen's Algorithm Complexity]
+The recurrence is:
+\[
+T(n) = 7T(n/2) + O(n^2)
+\]
+
+With $a = 7$, $b = 2$, $c = 2$:
+\[
+\log_2 7 \approx 2.807 > 2 = c
+\]
+
+By Case 3 of the Master Theorem:
+\[
+T(n) = O(n^{\log_2 7}) = O(n^{2.807})
+\]
+
+This is a significant improvement over $O(n^3)$ for large matrices.
+\end{rigour}
+
+\begin{redbox}[Strassen's Algorithm in Practice]
+While asymptotically faster, Strassen's algorithm has practical limitations:
+\begin{itemize}
+    \item Higher constant factors make it slower for small matrices
+    \item Numerical stability can be slightly worse
+    \item Memory access patterns are less cache-friendly
+    \item Typically only used for matrices larger than $\sim$500--1000
+\end{itemize}
+
+Modern implementations often use Strassen at top levels and switch to standard multiplication for smaller blocks.
+\end{redbox}
+
+\subsection{Significance of Matrix Multiplication Complexity}
+
+Matrix multiplication is a fundamental primitive. Many important operations have the \textbf{same complexity} as matrix multiplication:
+
+\begin{itemize}
+    \item Matrix squaring: $A^2 = A \times A$
+    \item Matrix inversion: $A^{-1}$
+    \item Determinant computation: $\det(A)$
+    \item Matrix rank
+    \item Solving linear systems: $Ax = b$
+    \item LU decomposition
+    \item Least squares: $\min_x \|Ax - b\|^2$
+\end{itemize}
+
+Any improvement in matrix multiplication complexity automatically improves all these operations. Currently, the best known algorithm achieves approximately $O(n^{2.373})$, though the constant factors make it impractical.
+
+%=============================================================================
+\section{Summary: The Divide and Conquer Paradigm}
+%=============================================================================
+
+\begin{keybox}[Divide and Conquer: Key Takeaways]
+\textbf{The Pattern}:
+\begin{enumerate}
+    \item Divide the problem into smaller subproblems
+    \item Conquer each subproblem recursively
+    \item Combine solutions into the final answer
+\end{enumerate}
+
+\textbf{When to Use}:
+\begin{itemize}
+    \item Problem has natural recursive structure
+    \item Subproblems are independent
+    \item Combining solutions is efficient
+\end{itemize}
+
+\textbf{Analysis Tool}: The Master Theorem handles recurrences $T(n) = aT(n/b) + O(n^c)$
+\end{keybox}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Algorithm} & \textbf{Recurrence} & \textbf{Complexity} & \textbf{Improvement Over Naive} \\
+\midrule
+MergeSort & $2T(n/2) + O(n)$ & $O(n \log n)$ & vs $O(n^2)$ \\
+Counting Inversions & $2T(n/2) + O(n)$ & $O(n \log n)$ & vs $O(n^2)$ \\
+QuickSelect & $T(3n/4) + O(n)$ & $O(n)$ & vs $O(n \log n)$ \\
+Closest Pair & $2T(n/2) + O(n)$ & $O(n \log n)$ & vs $O(n^2)$ \\
+Strassen's & $7T(n/2) + O(n^2)$ & $O(n^{2.807})$ & vs $O(n^3)$ \\
+\bottomrule
+\end{tabular}
+\caption{Summary of divide and conquer algorithms covered, their recurrences, complexities, and improvements over naive approaches.}
+\label{table:dc-summary}
+\end{table}
+
+The divide and conquer paradigm demonstrates a powerful principle: by carefully structuring how we decompose and recombine problems, we can achieve dramatic algorithmic improvements. The $O(n \log n)$ algorithms for sorting, counting inversions, and closest pair all exploit the same recursive structure, while QuickSelect shows that when we only need partial information (the $k$th element rather than full sorted order), we can do even better.
